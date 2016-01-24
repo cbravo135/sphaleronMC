@@ -32,7 +32,14 @@ int makeMC()
         daughters.clear();
 
         TLorentzVector dghtr;
-        dghtr.SetPtEtaPhiM(0.0,0.0,0.0,rand.BreitWigner(91.2,2.5));
+        double M = rand.BreitWigner(91.2,2.5);
+        while (M < 10.0)
+        {
+            M = rand.BreitWigner(91.2,2.5);
+        }
+        double pz = rand.Gaus(50.0,1.0);
+        dghtr.SetPxPyPzE(0.0,0.0,pz,sqrt(M*M+pz*pz));
+        if(abs(dghtr.M()) == 0 ) cout << "M: " << M << endl;
 
         biP dp;
 

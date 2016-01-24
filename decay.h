@@ -23,6 +23,8 @@ biP decayTwo(TLorentzVector mother,double m1, double m2)
     boost = mother.BoostVector();
     double mass = mother.M();
 
+    if(m1 + m2 > mass) throw std::invalid_argument( "Daughter mass sum must be less than Mother mass" );
+
     //Decay in random direction
     double th1 = acos(2.0*rand.Uniform()-1.0);
     double phi1 = 2.0*M_PI*rand.Uniform() - M_PI;
