@@ -12,7 +12,7 @@
 
 int makeMC()
 {
-    int Nevt = 100;
+    int Nevt = 10000;
     vector<TLorentzVector> daughters;
     TRandom3 rand;
     rand.SetSeed(0);
@@ -33,7 +33,6 @@ int makeMC()
 
         TLorentzVector dghtr;
         dghtr.SetPtEtaPhiM(0.0,0.0,0.0,rand.BreitWigner(91.2,2.5));
-        daughters.push_back(dghtr);
 
         biP dp;
 

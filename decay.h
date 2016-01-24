@@ -5,6 +5,8 @@
 #include "TLorentzVector.h"
 #include "TVector3.h"
 
+using namespace std;
+
 struct biP 
 {
     TLorentzVector p1;
@@ -19,9 +21,9 @@ biP decayTwo(TLorentzVector mother,double m1, double m2)
     //Get boost vector
     TVector3 boost;
     boost = mother.BoostVector();
+    double mass = mother.M();
 
     //Decay in random direction
-    double mass = mother.M();
     double th1 = acos(2.0*rand.Uniform()-1.0);
     double phi1 = 2.0*M_PI*rand.Uniform() - M_PI;
 
@@ -36,6 +38,15 @@ biP decayTwo(TLorentzVector mother,double m1, double m2)
     biP output;
     output.p1.SetPxPyPzE(p1.Px(),p1.Py(),p1.Pz(),E1);
     output.p2.SetPxPyPzE(p2.Px(),p2.Py(),p2.Pz(),E2);
+
+    if(abs(output.p1.Eta()) > 100 )
+    {
+        cout << "mass: " << mass << endl;
+        cout << "th1: " << th1 << endl;
+        cout << "E1: " << E1 << endl;
+        cout << "phi1: " << phi1 << endl;
+        cout << "mp1: " << mp1 << endl;
+    }
 
     //Boost into lab frame
     output.p1.Boost(boost);
