@@ -6,6 +6,8 @@
 #include "TRandom3.h"
 #include "TFile.h"
 
+#include "decay.h"
+
 #pragma link C++ class std::vector < std::vector<TLorentzVector> >+;
 
 int makeMC()
@@ -28,18 +30,17 @@ int makeMC()
     for(int i = 0; i < Nevt; i++ )
     {
         daughters.clear();
-        for(int p = 0; p < 12; p++)
-        {
-            ct = 2*rand.Uniform() - 1;
-            t = acos(ct);
-            eta = -1.0*log(tan(t/2.0));
-            phi = 2.0*M_PI*rand.Uniform();
-            pt = 80.0*rand.Uniform()+20;
-            
-            TLorentzVector dghtr;
-            dghtr.SetPtEtaPhiM(pt,eta,phi,0.0);
-            daughters.push_back(dghtr);
-        }
+
+        TLorentzVector dghtr;
+        dghtr.SetPtEtaPhiM(0.0,0.0,0.0,rand.BreitWigner(91.2,2.5));
+        daughters.push_back(dghtr);
+
+        biP dp;
+
+        dp = decayTwo(dghtr,3.0,7.0);
+        daughters.push_back(dp.p1);
+        daughters.push_back(dp.p2);
+
         myT->Fill();
     }
 
