@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Sat Jan 23 19:12:39 2016 by ROOT version 6.06/00
+// Mon Jan 25 23:50:49 2016 by ROOT version 6.06/00
 // from TTree mcTree/mcTree
 // found on file: mcTree.root
 //////////////////////////////////////////////////////////
@@ -10,9 +10,11 @@
 
 #include <TROOT.h>
 #include <TChain.h>
+#include <TLorentzVector.h>
 #include <TFile.h>
 
 // Header file for the classes stored in the TTree if any.
+#include "vector"
 
 class mcTree {
 public :
@@ -23,9 +25,11 @@ public :
 
    // Declaration of leaf types
    vector<TLorentzVector> *daughters;
+   vector<double>  *momMass;
 
    // List of branches
    TBranch        *b_daughters;   //!
+   TBranch        *b_momMass;   //!
 
    mcTree(TTree *tree=0);
    virtual ~mcTree();
@@ -93,6 +97,7 @@ void mcTree::Init(TTree *tree)
 
    // Set object pointer
    daughters = 0;
+   momMass = 0;
    // Set branch addresses and branch pointers
    if (!tree) return;
    fChain = tree;
@@ -100,6 +105,7 @@ void mcTree::Init(TTree *tree)
    fChain->SetMakeClass(1);
 
    fChain->SetBranchAddress("daughters", &daughters, &b_daughters);
+   fChain->SetBranchAddress("momMass", &momMass, &b_momMass);
    Notify();
 }
 

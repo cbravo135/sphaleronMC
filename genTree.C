@@ -2,6 +2,7 @@
 #include <cmath>
 
 #include "TLorentzVector.h"
+#include "TGenPhaseSpace.h"
 #include "TTree.h"
 #include "TRandom3.h"
 #include "TFile.h"
@@ -14,6 +15,7 @@ int makeMC()
 {
     int Nevt = 10000;
     vector<TLorentzVector> daughters;
+    vector<double> momMass;
     TRandom3 rand;
     rand.SetSeed(0);
     double ct = 0.0;
@@ -26,27 +28,38 @@ int makeMC()
 
     TTree *myT = new TTree("mcTree","mcTree");
     myT->Branch("daughters",&daughters); 
+    myT->Branch("momMass",&momMass); 
 
     for(int i = 0; i < Nevt; i++ )
     {
         daughters.clear();
+        momMass.clear();
 
         TLorentzVector dghtr;
-        double M = rand.BreitWigner(91.2,2.5);
-        while (M < 10.0)
+        dghtr.SetPxPyPzE(0.0,0.0,0.0,9100.0);
+        biP dd = decayTwo(dghtr,9100.0/2.0,9100.0/2.0);
+        daughters.push_back(dd.p1);
+        daughters.push_back(dd.p2);
+        for(int d = 2; d < 6;d++)
         {
-            M = rand.BreitWigner(91.2,2.5);
+            int di = rand.Integer(d);
+            TLorentzVector preDecay = daughters.at(di);
+            biP postDecay = decayTwo(preDecay, preDecay.M()/2.0, preDecay.M()/2.0);
+            daughters.at(di) = postDecay.p1;
+            daughters.push_back(postDecay.p2);
         }
-        double pz = rand.Gaus(50.0,1.0);
-        dghtr.SetPxPyPzE(0.0,0.0,pz,sqrt(M*M+pz*pz));
-        if(abs(dghtr.M()) == 0 ) cout << "M: " << M << endl;
-
-        biP dp;
-
-        dp = decayTwo(dghtr,3.0,7.0);
-        daughters.push_back(dp.p1);
-        daughters.push_back(dp.p2);
-
+        for(int d = 0; d < 6; d++)
+        {
+            momMass.push_back(daughters.at(d).M());
+        }
+        for(int d = 0; d < 6; d++)
+        {
+            TLorentzVector preDecay = daughters.at(d);
+            biP postDecay = decayTwo(preDecay,0.0,0.0);
+            daughters.at(d) = postDecay.p1;
+            daughters.push_back(postDecay.p2);
+            momMass.push_back(preDecay.M());
+        }
         myT->Fill();
     }
 
