@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdlib.h> 
 #include <cmath>
 #include <vector>
 
@@ -10,19 +11,31 @@
 #include "TF1.h"
 #include "TH1.h"
 
-#include "sphalerons.h"
-
+#include "particles.h"
 #include "genTree.h"
+
 #define NPART 12
+#define ARGS 3
+
 
 using namespace std;
 
 
-int main()
+int main(int argc, char* argv[])
 {
-    int Nevt = 10000;
+
+    if(argc != ARGS+1)
+    {
+        cout << "./genTree threshold maxweight Nevents" << endl;
+        return -99;
+    }
+
+    float thr = atof(argv[1]);
+    float maxW = atof(argv[2]);
+    int Nevt = atoi(argv[3]);
+    double maxwt = 0;
+
     int NF = 0;
-    double maxwt = 0.0;
     vector<double> m2;
     TRandom3 rand;
     rand.SetSeed(0);
@@ -30,8 +43,46 @@ int main()
     TLorentzVector mom(0.0,0.0,0.0,9100.0);
     TLorentzVector u1(0.0,0.0,0.0,0.0);
     TLorentzVector u2(0.0,0.0,0.0,0.0);
-    fillSphal();
     double masses[NPART];
+    double sphal[2][12];
+
+
+    sphal[0][0] = ELE_MASS;
+    sphal[1][0] = ELE_PID;
+
+    sphal[0][1] = MU_MASS;
+    sphal[1][1] = MU_PID;
+
+    sphal[0][2] = TAU_MASS;
+    sphal[1][2] = TAU_PID;
+
+    sphal[0][3] = TQ_MASS;
+    sphal[1][3] = TQ_PID;
+
+    sphal[0][4] = TQ_MASS;
+    sphal[1][4] = TQ_PID;
+
+    sphal[0][5] = BQ_MASS;
+    sphal[1][5] = BQ_PID;
+
+    sphal[0][6] = CQ_MASS;
+    sphal[1][6] = CQ_PID;
+
+    sphal[0][7] = CQ_MASS;
+    sphal[1][7] = CQ_PID;
+
+    sphal[0][8] = SQ_MASS;
+    sphal[1][8] = SQ_PID;
+
+    sphal[0][9] = UQ_MASS;
+    sphal[1][9] = UQ_PID;
+
+    sphal[0][10] = UQ_MASS;
+    sphal[1][10] = UQ_PID;
+
+    sphal[0][11] = DQ_MASS;
+    sphal[1][11] = DQ_PID;
+
     double weight = 0.0;
 
     TGenPhaseSpace gen;
@@ -41,17 +92,19 @@ int main()
     double momM = 0.0;
     double pz = 0.0;
 
-    TF1 pdfu("pdfu","5.1072*(x^(0.8))*(1-x)^3/x",0.0,1.0);
+    TFile *myF = new TFile("mcTree.root","RECREATE","Holds daughters from sphaleron decay");
 
+    //TF1 pdfu("pdfu","5.1072*(x^(0.8))*(1-x)^3/x",thr*thr/13000.0*13000.0,1.0);
+    TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",thr*thr/(13000.0*13000.0),1.0);
+
+    //masses[0] = TQ_MASS;
+    //masses[1] = TQ_MASS;
 
     for(int i = 0; i < NPART; i++)
     {
         masses[i] = sphal[0][i];
         cout << "masses[" << i << "] = " << masses[i] << endl;
     }
-
-
-    TFile *myF = new TFile("mcTree.root","RECREATE","Holds daughters from sphaleron decay");
 
     TH1D *x1_h = new TH1D("x1_h","x1 inclusive",1000,0.0,1.0);
 
@@ -65,17 +118,20 @@ int main()
     myT->Branch("Q2",&Q2); 
     myT->Branch("momM",&momM); 
 
+    int pdfN = 0;
+
     while(NF < Nevt)
     {
         daughters.clear();
         m2.clear();
 
         Q2 = 0.0;
-        while(Q2 < 9100*9100)
+        while(Q2 < thr*thr)
         {
             x1 = pdfu.GetRandom();
             x2 = pdfu.GetRandom();
             Q2 = x1*x2*13000*13000;
+            pdfN++;
             x1_h->Fill(x1);
         }
 
@@ -101,7 +157,7 @@ int main()
         {
             for(int ii = 0; ii < NPART; ii++)
             {
-                if(i != ii)p[i] = p[i] + daughters.at(ii);
+                if(i != ii) p[i] = p[i] + daughters[ii];
             }
             m2.push_back(p[i].M2());
         }
@@ -114,17 +170,19 @@ int main()
 
 
         //if(0.146556*rand.Uniform() < weight && m2[3] < 1100 && m2[3] > 900) 
-        if(1.19751e-09*rand.Uniform() < weight) 
+        //if(1.59751e-09*rand.Uniform() < weight) 
+        if(maxW*rand.Uniform() < weight) 
         {
             myT->Fill();
             NF++;
-            if(NF%100 == 0) cout << "Produced Event " << NF << endl;
+            if(NF%(Nevt/10) == 0) cout << "Produced Event " << NF << "  pdfN : " << pdfN << endl;
         }
     }
 
     cout << "Max Weight: " << maxwt << endl;
 
     x1_h->Write();
+    pdfu.Write();
     myT->Write();
     myF->Write();
     myF->Close();
