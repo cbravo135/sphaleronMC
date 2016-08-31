@@ -11,15 +11,13 @@
 #include "TF1.h"
 #include "TH1.h"
 
-#include "particles.h"
-#include "genTree.h"
+#include "../include/particles.h"
+#include "../include/genTree.h"
 
 #define NPART 12
 #define ARGS 3
 
-
 using namespace std;
-
 
 int main(int argc, char* argv[])
 {
