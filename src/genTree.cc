@@ -13,6 +13,7 @@
 
 #include "../include/particles.h"
 #include "../include/genTree.h"
+#include "../include/LHEWriter.h"
 
 #define NPART 12
 #define ARGS 3
@@ -91,6 +92,7 @@ int main(int argc, char* argv[])
     double pz = 0.0;
 
     TFile *myF = new TFile("mcTree.root","RECREATE","Holds daughters from sphaleron decay");
+    LHEWriter lheF("sphaleronTest");
 
     //TF1 pdfu("pdfu","5.1072*(x^(0.8))*(1-x)^3/x",thr*thr/13000.0*13000.0,1.0);
     TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",thr*thr/(13000.0*13000.0),1.0);
@@ -98,9 +100,11 @@ int main(int argc, char* argv[])
     //masses[0] = TQ_MASS;
     //masses[1] = TQ_MASS;
 
+    vector<int> decayPID;
     for(int i = 0; i < NPART; i++)
     {
         masses[i] = sphal[0][i];
+        decayPID.push_back(sphal[1][i]);
         cout << "masses[" << i << "] = " << masses[i] << endl;
     }
 
@@ -171,6 +175,7 @@ int main(int argc, char* argv[])
         //if(1.59751e-09*rand.Uniform() < weight) 
         if(maxW*rand.Uniform() < weight) 
         {
+            lheF.writeEvent(daughters,decayPID);
             myT->Fill();
             NF++;
             if(NF%(Nevt/10) == 0) cout << "Produced Event " << NF << "  pdfN : " << pdfN << endl;
@@ -179,6 +184,7 @@ int main(int argc, char* argv[])
 
     cout << "Max Weight: " << maxwt << endl;
 
+    lheF.close();
     x1_h->Write();
     pdfu.Write();
     myT->Write();
