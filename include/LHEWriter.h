@@ -15,7 +15,7 @@ class LHEWriter
         LHEWriter(string fName);
         ~LHEWriter();
 
-        int writeEvent(vector<TLorentzVector> decayK, vector<int> decayPIDs);
+        int writeEvent(vector<TLorentzVector> decayK, vector<int> decayPIDs, vector<int> decayColz);
         int close();
 
 };

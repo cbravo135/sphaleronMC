@@ -17,14 +17,14 @@ LHEWriter::~LHEWriter()
 {
 }
 
-int LHEWriter::writeEvent(vector<TLorentzVector> decayK, vector<int> decayPIDs)
+int LHEWriter::writeEvent(vector<TLorentzVector> decayK, vector<int> decayPIDs, vector<int> decayColz)
 {
     oF << "<event>" << endl;
     oF << "\t" << decayK.size() << " 1 1 -1 -1 -1" << endl;
     for(int i = 0; i < int(decayK.size()); i++)
     {
         oF << "\t" << decayPIDs.at(i) << " 1 0 0 ";
-        oF << 500 + i << " 0 ";
+        oF << decayColz[i] << " 0 ";
         oF << decayK[i].Px() << " ";
         oF << decayK[i].Py() << " ";
         oF << decayK[i].Pz() << " ";

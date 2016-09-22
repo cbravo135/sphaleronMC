@@ -15,7 +15,7 @@
 #include "../include/genTree.h"
 #include "../include/LHEWriter.h"
 
-#define NPART 12
+#define NPART 10
 #define ARGS 3
 
 using namespace std;
@@ -47,40 +47,40 @@ int main(int argc, char* argv[])
 
 
     sphal[0][0] = ELE_MASS;
-    sphal[1][0] = ELE_PID;
+    sphal[1][0] = -1*ELE_PID;
 
     sphal[0][1] = MU_MASS;
-    sphal[1][1] = MU_PID;
+    sphal[1][1] = -1*MU_PID;
 
     sphal[0][2] = TAU_MASS;
-    sphal[1][2] = TAU_PID;
+    sphal[1][2] = -1*TAU_PID;
 
     sphal[0][3] = TQ_MASS;
-    sphal[1][3] = TQ_PID;
+    sphal[1][3] = -1*TQ_PID;
 
     sphal[0][4] = TQ_MASS;
-    sphal[1][4] = TQ_PID;
+    sphal[1][4] = -1*TQ_PID;
 
     sphal[0][5] = BQ_MASS;
-    sphal[1][5] = BQ_PID;
+    sphal[1][5] = -1*BQ_PID;
 
     sphal[0][6] = CQ_MASS;
-    sphal[1][6] = CQ_PID;
+    sphal[1][6] = -1*CQ_PID;
 
     sphal[0][7] = CQ_MASS;
-    sphal[1][7] = CQ_PID;
+    sphal[1][7] = -1*CQ_PID;
 
     sphal[0][8] = SQ_MASS;
-    sphal[1][8] = SQ_PID;
+    sphal[1][8] = -1*SQ_PID;
 
-    sphal[0][9] = UQ_MASS;
-    sphal[1][9] = UQ_PID;
+    sphal[0][9] = DQ_MASS;
+    sphal[1][9] = -1*DQ_PID;
 
     sphal[0][10] = UQ_MASS;
-    sphal[1][10] = UQ_PID;
+    sphal[1][10] = -1*UQ_PID;
 
-    sphal[0][11] = DQ_MASS;
-    sphal[1][11] = DQ_PID;
+    sphal[0][11] = UQ_MASS;
+    sphal[1][11] = -1*UQ_PID;
 
     double weight = 0.0;
 
@@ -97,14 +97,15 @@ int main(int argc, char* argv[])
     //TF1 pdfu("pdfu","5.1072*(x^(0.8))*(1-x)^3/x",thr*thr/13000.0*13000.0,1.0);
     TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",thr*thr/(13000.0*13000.0),1.0);
 
-    //masses[0] = TQ_MASS;
-    //masses[1] = TQ_MASS;
-
     vector<int> decayPID;
+    vector<int> decayColz;
+    int Nline = 0;
     for(int i = 0; i < NPART; i++)
     {
         masses[i] = sphal[0][i];
         decayPID.push_back(sphal[1][i]);
+        if(fabs(sphal[1][i]) > 10) decayColz.push_back(0);
+        else decayColz.push_back(500 + Nline++); 
         cout << "masses[" << i << "] = " << masses[i] << endl;
     }
 
@@ -175,7 +176,7 @@ int main(int argc, char* argv[])
         //if(1.59751e-09*rand.Uniform() < weight) 
         if(maxW*rand.Uniform() < weight) 
         {
-            lheF.writeEvent(daughters,decayPID);
+            lheF.writeEvent(daughters,decayPID,decayColz);
             myT->Fill();
             NF++;
             if(NF%(Nevt/10) == 0) cout << "Produced Event " << NF << "  pdfN : " << pdfN << endl;
