@@ -23,8 +23,11 @@ int LHEWriter::writeEvent(vector<TLorentzVector> decayK, vector<int> decayPIDs, 
     oF << "\t" << decayK.size() << " 1 1 -1 -1 -1" << endl;
     for(int i = 0; i < int(decayK.size()); i++)
     {
-        oF << "\t" << decayPIDs.at(i) << " 1 0 0 ";
-        oF << decayColz[i] << " 0 ";
+        if(i < 2) oF << "\t" << decayPIDs.at(i) << " -1 0 0 ";
+        else oF << "\t" << decayPIDs.at(i) << " 1 1 2 ";
+        //else if (i == 2) oF << "\t" << decayPIDs.at(i) << " 2 1 2 ";
+        if(decayPIDs[i] > 0) oF << decayColz[i] << " 0 ";
+        else oF << "0 "  << decayColz[i] << " ";
         oF << decayK[i].Px() << " ";
         oF << decayK[i].Py() << " ";
         oF << decayK[i].Pz() << " ";

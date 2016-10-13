@@ -15,7 +15,7 @@
 #include "../include/genTree.h"
 #include "../include/LHEWriter.h"
 
-#define NPART 10
+#define NPART 12
 #define ARGS 3
 
 using namespace std;
@@ -46,41 +46,41 @@ int main(int argc, char* argv[])
     double sphal[2][12];
 
 
-    sphal[0][0] = ELE_MASS;
-    sphal[1][0] = -1*ELE_PID;
+    sphal[0][0] = TQ_MASS;
+    sphal[1][0] = -1*TQ_PID;
 
-    sphal[0][1] = MU_MASS;
-    sphal[1][1] = -1*MU_PID;
+    sphal[0][1] = TQ_MASS;
+    sphal[1][1] = -1*TQ_PID;
 
-    sphal[0][2] = TAU_MASS;
-    sphal[1][2] = -1*TAU_PID;
+    sphal[0][2] = BQ_MASS;
+    sphal[1][2] = -1*BQ_PID;
 
-    sphal[0][3] = TQ_MASS;
-    sphal[1][3] = -1*TQ_PID;
+    sphal[0][3] = TAU_MASS;
+    sphal[1][3] = -1*TAU_PID;
 
-    sphal[0][4] = TQ_MASS;
-    sphal[1][4] = -1*TQ_PID;
+    sphal[0][4] = CQ_MASS;
+    sphal[1][4] = -1*CQ_PID;
 
-    sphal[0][5] = BQ_MASS;
-    sphal[1][5] = -1*BQ_PID;
+    sphal[0][5] = CQ_MASS;
+    sphal[1][5] = -1*CQ_PID;
 
-    sphal[0][6] = CQ_MASS;
-    sphal[1][6] = -1*CQ_PID;
+    sphal[0][6] = SQ_MASS;
+    sphal[1][6] = -1*SQ_PID;
 
-    sphal[0][7] = CQ_MASS;
-    sphal[1][7] = -1*CQ_PID;
+    sphal[0][7] = MU_MASS;
+    sphal[1][7] = -1*MU_PID;
 
-    sphal[0][8] = SQ_MASS;
-    sphal[1][8] = -1*SQ_PID;
+    sphal[0][8] = DQ_MASS;
+    sphal[1][8] = -1*DQ_PID;
 
-    sphal[0][9] = DQ_MASS;
-    sphal[1][9] = -1*DQ_PID;
+    sphal[0][9] = UQ_MASS;
+    sphal[1][9] = -1*UQ_PID;
 
     sphal[0][10] = UQ_MASS;
     sphal[1][10] = -1*UQ_PID;
 
-    sphal[0][11] = UQ_MASS;
-    sphal[1][11] = -1*UQ_PID;
+    sphal[0][11] = ELE_MASS;
+    sphal[1][11] = -1*ELE_PID;
 
     double weight = 0.0;
 
@@ -99,13 +99,21 @@ int main(int argc, char* argv[])
 
     vector<int> decayPID;
     vector<int> decayColz;
+    //For now both incoming quarks are ups
+    decayPID.push_back(UQ_PID);
+    decayColz.push_back(501);
+    decayPID.push_back(UQ_PID);
+    decayColz.push_back(502);
+    //Now the sphaleron mediator
+    //decayPID.push_back(-10000099);
+    //decayColz.push_back(503);
     int Nline = 0;
     for(int i = 0; i < NPART; i++)
     {
         masses[i] = sphal[0][i];
         decayPID.push_back(sphal[1][i]);
         if(fabs(sphal[1][i]) > 10) decayColz.push_back(0);
-        else decayColz.push_back(500 + Nline++); 
+        else decayColz.push_back(503 + Nline++); 
         cout << "masses[" << i << "] = " << masses[i] << endl;
     }
 
@@ -140,7 +148,10 @@ int main(int argc, char* argv[])
 
         u1.SetXYZM(0.0,0.0,x1*6500,0.0);
         u2.SetXYZM(0.0,0.0,x2*(-6500),0.0);
+        daughters.push_back(u1);
+        daughters.push_back(u2);
         mom = u1 + u2;
+        //daughters.push_back(mom);
         momM = mom.M();
         pz = mom.Pz();
 
