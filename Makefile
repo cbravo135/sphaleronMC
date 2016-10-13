@@ -12,4 +12,4 @@ libMyLib.so: MyDict.cxx
 	g++ -shared -o$@ `root-config --ldflags` $(CXXFLAGS) -I$(ROOTSYS)/include $^
 
 genTree: MyDict.cxx $(SRCS)
-	g++ $(CXXFLAGS) $(GLIBS) $(SRCS) -o $@
+	g++ $(CXXFLAGS) $(SRCS) -o $@ $(GLIBS) 
