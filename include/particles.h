@@ -17,3 +17,10 @@
 #define SQ_PID 3
 #define DQ_PID 1
 #define UQ_PID 2
+
+struct particle
+{
+    int pid;
+    float mass;
+    int color;
+};
