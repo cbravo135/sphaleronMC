@@ -9,8 +9,11 @@
 #define UQ_MASS 0.0023
 
 #define ELE_PID 11
+#define ENU_PID 12
 #define MU_PID 13
+#define MNU_PID 14
 #define TAU_PID 15
+#define TNU_PID 16
 #define TQ_PID 6
 #define BQ_PID 5
 #define CQ_PID 4
