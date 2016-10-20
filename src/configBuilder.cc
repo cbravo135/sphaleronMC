@@ -1,7 +1,14 @@
 #include "../include/configBuilder.h"
+#include <iostream>
+
+using namespace std;
 
 configBuilder::configBuilder()
 {
+    //Seed random number generator
+    rand.SetSeed(0);
+
+    //Build Fermion Doublets
     particle partBuf;
     partBuf.mass = ELE_MASS;
     partBuf.pid = ELE_PID;
@@ -13,13 +20,13 @@ configBuilder::configBuilder()
     partBuf.color = 0;
     parts.push_back(partBuf);  // 1
 
-    partBuf.mass = UQ_MASS;
-    partBuf.pid = UQ_PID;
+    partBuf.mass = DQ_MASS;
+    partBuf.pid = DQ_PID;
     partBuf.color = 1;
     parts.push_back(partBuf);  // 2
 
-    partBuf.mass = DQ_MASS;
-    partBuf.pid = DQ_PID;
+    partBuf.mass = UQ_MASS;
+    partBuf.pid = UQ_PID;
     partBuf.color = 1;
     parts.push_back(partBuf);  // 3
 
@@ -33,13 +40,13 @@ configBuilder::configBuilder()
     partBuf.color = 0;
     parts.push_back(partBuf);  // 5
 
-    partBuf.mass = CQ_MASS;
-    partBuf.pid = CQ_PID;
+    partBuf.mass = SQ_MASS;
+    partBuf.pid = SQ_PID;
     partBuf.color = 1;
     parts.push_back(partBuf);  // 6
 
-    partBuf.mass = SQ_MASS;
-    partBuf.pid = SQ_PID;
+    partBuf.mass = CQ_MASS;
+    partBuf.pid = CQ_PID;
     partBuf.color = 1;
     parts.push_back(partBuf);  // 7
 
@@ -53,13 +60,13 @@ configBuilder::configBuilder()
     partBuf.color = 0;
     parts.push_back(partBuf);  // 9
 
-    partBuf.mass = TQ_MASS;
-    partBuf.pid = TQ_PID;
+    partBuf.mass = BQ_MASS;
+    partBuf.pid = BQ_PID;
     partBuf.color = 1;
     parts.push_back(partBuf);  // 10
 
-    partBuf.mass = BQ_MASS;
-    partBuf.pid = BQ_PID;
+    partBuf.mass = TQ_MASS;
+    partBuf.pid = TQ_PID;
     partBuf.color = 1;
     parts.push_back(partBuf);  // 11
 }
@@ -68,9 +75,73 @@ configBuilder::~configBuilder()
 {
 }
 
-vector<particle> configBuilder::build(int dCS)
+vector<particle> configBuilder::build(int iQ1, int iQ2)
 {
     vector<particle> conf;
+    vector<int> doublets;
+    int dCS = 2*rand.Integer(2) - 1;//Choose matter (1) or antimatter (-1)
+    //cout << "dCS: " << dCS << endl;
+    for(int i = 0; i < 12; i++)
+    {
+        doublets.push_back(i);
+    }
+    while(doublets.size() > 0)
+    {
+        int j = rand.Integer(doublets.size()); //Choose a random doublet from the list of the remaining doublets
+        int doub = doublets[j];
+        int partI = (doub/4)*4 + 2*int(bool(doub%4)) + (12-doublets.size())%2;//This is the magic part of this whole thing
+        particle part = parts[partI];
+        part.pid = dCS*part.pid;
+        conf.push_back(part);
+        doublets.erase(doublets.begin()+j);
+    }
+
+    bool spec1 = true;
+    bool spec2 = true;
+    for(int i = 0; i < 12; i++)
+    {
+        if(iQ1 + conf[i].pid == 0 && spec1)
+        {
+            conf.erase(conf.begin()+i);
+            spec1 = false;
+        }
+        else if(iQ2 + conf[i].pid == 0 && spec2)
+        {
+            conf.erase(conf.begin()+i);
+            spec2 = false;
+        }
+    }
+    if(spec1)
+    {
+        //Look up spectator quark particle info and push on configuration
+        particle specBuf;
+        for(int i = 0; i < parts.size(); i++)
+        {
+            if(fabs(iQ1) == parts[i].pid)
+            {
+                specBuf = parts[i];
+                specBuf.pid = iQ1;
+            }
+        }
+        conf.push_back(specBuf);
+    }
+
+    if(spec2)
+    {
+        //Look up spectator quark particle info and push on configuration
+        particle specBuf;
+        for(int i = 0; i < parts.size(); i++)
+        {
+            if(fabs(iQ2) == parts[i].pid)
+            {
+                specBuf = parts[i];
+                specBuf.pid = iQ2;
+            }
+        }
+        conf.push_back(specBuf);
+    }
+
+    /*conf.clear();
     for(int i = 0; i < parts.size(); i++)
     {
         if(i==1 || i==5 || i==9) continue;
@@ -80,7 +151,7 @@ vector<particle> configBuilder::build(int dCS)
         partBuf.color = parts[i].color;
         conf.push_back(partBuf);
         if(i == 2 || i == 6 || i == 10) conf.push_back(partBuf);
-    }
+    }*/
     return conf;
 }
 

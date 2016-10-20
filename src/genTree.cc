@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
         //decayPID.push_back(-10000099);
         //decayColz.push_back(503);
 
-        vector<particle> confBuf = confBuild.build(-1);
+        vector<particle> confBuf = confBuild.build(UQ_PID,UQ_PID);
 
         int Nline = 0;
         for(int i = 0; i < confBuf.size(); i++)
