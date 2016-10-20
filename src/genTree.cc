@@ -121,9 +121,13 @@ int main(int argc, char* argv[])
         momM = mom.M();
         pz = mom.Pz();
 
-        gen.SetDecay(mom, confBuf.size(), masses);
+        weight = 1.0;
+        while(weight > maxW*rand.Uniform())
+        {
+            gen.SetDecay(mom, confBuf.size(), masses);
 
-        weight = gen.Generate();
+            weight = gen.Generate();
+        }
 
         for(int ii = 0; ii < confBuf.size(); ii++)
         {
@@ -149,15 +153,10 @@ int main(int argc, char* argv[])
         }
 
 
-        //if(0.146556*rand.Uniform() < weight && m2[3] < 1100 && m2[3] > 900) 
-        //if(1.59751e-09*rand.Uniform() < weight) 
-        if(maxW*rand.Uniform() < weight) 
-        {
-            lheF.writeEvent(daughters,decayPID,decayColz);
-            myT->Fill();
-            NF++;
-            if(NF%(Nevt/10) == 0) cout << "Produced Event " << NF << "  pdfN : " << pdfN << endl;
-        }
+        lheF.writeEvent(daughters,decayPID,decayColz);
+        myT->Fill();
+        NF++;
+        if(NF%(Nevt/10) == 0) cout << "Produced Event " << NF << "  pdfN : " << pdfN << endl;
     }
 
     cout << "Max Weight: " << maxwt << endl;
