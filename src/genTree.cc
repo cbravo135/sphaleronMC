@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
     TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",thr*thr/(13000.0*13000.0),1.0);
 
     TH1D *x1_h = new TH1D("x1_h","x1 inclusive",1000,0.0,1.0);
+    TH1D *sumInterQ3_h = new TH1D("sumInterQ3_h","Intermidiate particle charges",21,-10.5,10.5);
 
     TTree *myT = new TTree("mcTree","mcTree");
     myT->Branch("daughters",&daughters); 
@@ -86,6 +87,7 @@ int main(int argc, char* argv[])
         decayColz.push_back(501);
         decayPID.push_back(UQ_PID);
         decayColz.push_back(502);
+        int colNow = 503;
         //Now the sphaleron mediator
         //decayPID.push_back(-10000099);
         //decayColz.push_back(503);
@@ -96,10 +98,6 @@ int main(int argc, char* argv[])
         for(int i = 0; i < confBuf.size(); i++)
         {
             masses[i] = confBuf[i].mass;
-            decayPID.push_back(confBuf[i].pid);
-            if(fabs(confBuf[i].pid) > 10) decayColz.push_back(0);
-            else decayColz.push_back(503 + Nline++); 
-            //cout << "masses[" << i << "] = " << masses[i] << endl;
         }
 
         Q2 = 0.0;
@@ -112,8 +110,8 @@ int main(int argc, char* argv[])
             x1_h->Fill(x1);
         }
 
-        u1.SetXYZM(0.0,0.0,x1*6500,0.0);
-        u2.SetXYZM(0.0,0.0,x2*(-6500),0.0);
+        u1.SetXYZM(0.0,0.0,x1*6500,UQ_MASS);
+        u2.SetXYZM(0.0,0.0,x2*(-6500),UQ_MASS);
         daughters.push_back(u1);
         daughters.push_back(u2);
         mom = u1 + u2;
@@ -129,13 +127,71 @@ int main(int argc, char* argv[])
             weight = gen.Generate();
         }
 
+        vector<TLorentzVector> decayBuf;
         for(int ii = 0; ii < confBuf.size(); ii++)
         {
             TLorentzVector prod = *gen.GetDecay(ii);
-            daughters.push_back(prod);
+            decayBuf.push_back(prod);
         }
 
-        TLorentzVector p[15];
+        int Nq = 0;
+        vector<int> qI;
+        int Nlep = 0;
+        vector<int> lepI;
+        int Ninter = 0;
+        for(int i = 0; i < confBuf.size(); i++)
+        {
+            if(fabs(confBuf[i].pid) > 7) //lepton
+            {
+                lepI.push_back(i);
+                Nlep++;
+            }
+            else //quark
+            {
+                qI.push_back(i);
+                Nq++;
+                if(qI.size() == 3 && Ninter < 2)
+                {
+                    TLorentzVector interP(0.0,0.0,0.0,0.0);
+                    int interQ3 = 0;
+                    for(int ii = 0; ii < qI.size(); ii++)
+                    {
+                        interP = interP + decayBuf[qI[ii]];
+                        interQ3 += confBuf[qI[ii]].q3;
+                    }
+                    sumInterQ3_h->Fill(interQ3);
+                    daughters.push_back(interP);
+                    decayColz.push_back(0);
+                    if(interQ3 == 0) decayPID.push_back(1000022);
+                    if(fabs(interQ3) == 3) decayPID.push_back(interQ3*1006213/fabs(interQ3));
+                    if(fabs(interQ3) == 6) decayPID.push_back(interQ3*1006223/fabs(interQ3));
+                    for(int ii = 0; ii < qI.size(); ii++)
+                    {
+                        daughters.push_back(decayBuf[qI[ii]]);
+                        decayColz.push_back(colNow++);
+                        decayPID.push_back(confBuf[qI[ii]].pid);
+                    }
+                    Ninter++;
+                    qI.clear();
+                }
+            }
+        }
+        for(int i = 0; i < qI.size(); i++)
+        {
+            daughters.push_back(decayBuf[qI[i]]);
+            if(confBuf.size() == 12 && qI.size() - (i+1) == 0) decayColz.push_back(501);
+            else if(confBuf.size() == 14 && qI.size() - (i+1) < 2) decayColz.push_back(501 + qI.size() - (i+1));
+            else decayColz.push_back(colNow++);
+            decayPID.push_back(confBuf[qI[i]].pid);
+        }
+        for(int i = 0; i < lepI.size(); i++)
+        {
+            daughters.push_back(decayBuf[lepI[i]]);
+            decayColz.push_back(0);
+            decayPID.push_back(confBuf[lepI[i]].pid);
+        }
+
+        TLorentzVector p[20];
 
         for(int i = 0; i < confBuf.size(); i++)
         {
@@ -171,3 +227,17 @@ int main(int argc, char* argv[])
 
     return 0;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
