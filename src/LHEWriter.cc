@@ -21,7 +21,7 @@ LHEWriter::~LHEWriter()
 
 int LHEWriter::writeEvent(vector<TLorentzVector> decayK, vector<int> decayPIDs, vector<int> decayColz)
 {
-    cout << "size check: " << decayK.size() << "\t" << decayPIDs.size() << "\t" << decayColz.size() << endl;
+    //cout << "size check: " << decayK.size() << "\t" << decayPIDs.size() << "\t" << decayColz.size() << endl;
     oF << "<event>" << endl;
     oF << "\t" << decayK.size() << " 7000 1 -1 -1 -1" << endl;
     for(int i = 0; i < int(decayK.size()); i++)

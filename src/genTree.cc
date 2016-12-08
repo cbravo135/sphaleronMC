@@ -2,6 +2,7 @@
 #include <stdlib.h> 
 #include <cmath>
 #include <vector>
+#include <string>
 
 #include "TLorentzVector.h"
 #include "TGenPhaseSpace.h"
@@ -14,8 +15,9 @@
 #include "../include/configBuilder.h"
 #include "../include/genTree.h"
 #include "../include/LHEWriter.h"
+#include "../include/protonPDF.h"
 
-#define ARGS 3
+#define ARGS 4
 
 using namespace std;
 
@@ -31,6 +33,7 @@ int main(int argc, char* argv[])
     float thr = atof(argv[1]);
     float maxW = atof(argv[2]);
     int Nevt = atoi(argv[3]);
+    string ofName = string(argv[4]);
     double maxwt = 0;
 
     int NF = 0;
@@ -52,14 +55,15 @@ int main(int argc, char* argv[])
     double momM = 0.0;
     double pz = 0.0;
 
-    TFile *myF = new TFile("mcTree.root","RECREATE","Holds daughters from sphaleron decay");
-    LHEWriter lheF("sphaleronTest");
+    TFile *myF = new TFile((ofName+".root").c_str(),"RECREATE","Holds daughters from sphaleron decay");
+    LHEWriter lheF(ofName);
 
     //TF1 pdfu("pdfu","5.1072*(x^(0.8))*(1-x)^3/x",thr*thr/13000.0*13000.0,1.0);
     TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",thr*thr/(13000.0*13000.0),1.0);
 
     TH1D *x1_h = new TH1D("x1_h","x1 inclusive",1000,0.0,1.0);
     TH1D *sumInterQ3_h = new TH1D("sumInterQ3_h","Intermidiate particle charges",21,-10.5,10.5);
+    protonPDF proton("/afs/cern.ch/user/b/bravo/work/sphaleron/mc/toy/mstw2008/Grids/mstw2008nnlo.00.dat",13000.0,thr*thr/(13000.0*13000.0));
 
     TTree *myT = new TTree("mcTree","mcTree");
     myT->Branch("daughters",&daughters); 
@@ -103,8 +107,10 @@ int main(int argc, char* argv[])
         Q2 = 0.0;
         while(Q2 < thr*thr)
         {
-            x1 = pdfu.GetRandom();
-            x2 = pdfu.GetRandom();
+            //x1 = pdfu.GetRandom();
+            //x2 = pdfu.GetRandom();
+            x1 = proton.sample();
+            x2 = proton.sample();
             Q2 = x1*x2*13000*13000;
             pdfN++;
             x1_h->Fill(x1);
@@ -134,11 +140,12 @@ int main(int argc, char* argv[])
             decayBuf.push_back(prod);
         }
 
-        int Nq = 0;
-        vector<int> qI;
+        vector<int> qIg1;
+        vector<int> qIg2;
+        vector<int> qIg3;
         int Nlep = 0;
         vector<int> lepI;
-        int Ninter = 0;
+        //Seperate leptons and quarks
         for(int i = 0; i < confBuf.size(); i++)
         {
             if(fabs(confBuf[i].pid) > 7) //lepton
@@ -148,42 +155,64 @@ int main(int argc, char* argv[])
             }
             else //quark
             {
-                qI.push_back(i);
-                Nq++;
-                if(qI.size() == 3 && Ninter < 2)
-                {
-                    TLorentzVector interP(0.0,0.0,0.0,0.0);
-                    int interQ3 = 0;
-                    for(int ii = 0; ii < qI.size(); ii++)
-                    {
-                        interP = interP + decayBuf[qI[ii]];
-                        interQ3 += confBuf[qI[ii]].q3;
-                    }
-                    sumInterQ3_h->Fill(interQ3);
-                    daughters.push_back(interP);
-                    decayColz.push_back(0);
-                    if(interQ3 == 0) decayPID.push_back(1000022);
-                    if(fabs(interQ3) == 3) decayPID.push_back(interQ3*1006213/fabs(interQ3));
-                    if(fabs(interQ3) == 6) decayPID.push_back(interQ3*1006223/fabs(interQ3));
-                    for(int ii = 0; ii < qI.size(); ii++)
-                    {
-                        daughters.push_back(decayBuf[qI[ii]]);
-                        decayColz.push_back(colNow++);
-                        decayPID.push_back(confBuf[qI[ii]].pid);
-                    }
-                    Ninter++;
-                    qI.clear();
-                }
+                if(fabs(confBuf[i].pid) > 4) qIg3.push_back(i);
+                else if(fabs(confBuf[i].pid) > 2) qIg2.push_back(i);
+                else qIg1.push_back(i);
             }
         }
-        for(int i = 0; i < qI.size(); i++)
+
+        //Push third Gen quarks onto output stack
+        TLorentzVector interP(0.0,0.0,0.0,0.0);
+        int interQ3 = 0;
+        for(int ii = 0; ii < qIg3.size(); ii++)
         {
-            daughters.push_back(decayBuf[qI[i]]);
-            if(confBuf.size() == 12 && qI.size() - (i+1) == 0) decayColz.push_back(501);
-            else if(confBuf.size() == 14 && qI.size() - (i+1) < 2) decayColz.push_back(501 + qI.size() - (i+1));
-            else decayColz.push_back(colNow++);
-            decayPID.push_back(confBuf[qI[i]].pid);
+            interP = interP + decayBuf[qIg3[ii]];
+            interQ3 += confBuf[qIg3[ii]].q3;
         }
+        sumInterQ3_h->Fill(interQ3);
+        daughters.push_back(interP);
+        decayColz.push_back(0);
+        if(interQ3 == 0) decayPID.push_back(1000022);
+        if(fabs(interQ3) == 3) decayPID.push_back(interQ3*1006213/fabs(interQ3));
+        if(fabs(interQ3) == 6) decayPID.push_back(interQ3*1006223/fabs(interQ3));
+        for(int ii = 0; ii < qIg3.size(); ii++)
+        {
+            daughters.push_back(decayBuf[qIg3[ii]]);
+            decayColz.push_back(colNow++);
+            decayPID.push_back(confBuf[qIg3[ii]].pid);
+        }
+
+        //Push second Gen quarks onto output stack
+        interP.SetPxPyPzE(0.0,0.0,0.0,0.0);
+        interQ3 = 0;
+        for(int ii = 0; ii < qIg2.size(); ii++)
+        {
+            interP = interP + decayBuf[qIg2[ii]];
+            interQ3 += confBuf[qIg2[ii]].q3;
+        }
+        sumInterQ3_h->Fill(interQ3);
+        daughters.push_back(interP);
+        decayColz.push_back(0);
+        if(interQ3 == 0) decayPID.push_back(1000022);
+        if(fabs(interQ3) == 3) decayPID.push_back(interQ3*1006213/fabs(interQ3));
+        if(fabs(interQ3) == 6) decayPID.push_back(interQ3*1006223/fabs(interQ3));
+        for(int ii = 0; ii < qIg2.size(); ii++)
+        {
+            daughters.push_back(decayBuf[qIg2[ii]]);
+            decayColz.push_back(colNow++);
+            decayPID.push_back(confBuf[qIg2[ii]].pid);
+        }
+
+        //Push first Gen quarks onto output stack
+        for(int i = 0; i < qIg1.size(); i++)
+        {
+            daughters.push_back(decayBuf[qIg1[i]]);
+            if(confBuf.size() == 12 && qIg1.size() - (i+1) == 0) decayColz.push_back(501);
+            else if(confBuf.size() == 14 && qIg1.size() - (i+1) < 2) decayColz.push_back(501 + qIg1.size() - (i+1));
+            else decayColz.push_back(colNow++);
+            decayPID.push_back(confBuf[qIg1[i]].pid);
+        }
+
         for(int i = 0; i < lepI.size(); i++)
         {
             daughters.push_back(decayBuf[lepI[i]]);
