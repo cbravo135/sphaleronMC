@@ -135,6 +135,7 @@ vector<particle> configBuilder::build(int iQ1, int iQ2)
             {
                 specBuf = parts[i];
                 specBuf.pid = iQ1;
+                specBuf.color = 501;
             }
         }
         conf.push_back(specBuf);
@@ -150,6 +151,7 @@ vector<particle> configBuilder::build(int iQ1, int iQ2)
             {
                 specBuf = parts[i];
                 specBuf.pid = iQ2;
+                specBuf.color = 502;
             }
         }
         conf.push_back(specBuf);

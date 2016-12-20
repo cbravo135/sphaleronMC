@@ -1,3 +1,9 @@
+#ifndef _PARTICLEH_
+#define _PARTICLEH_
+
+#include <vector>
+#include "TLorentzVector.h"
+
 #define ELE_MASS 0.000511
 #define ENU_MASS 0.0
 #define MU_MASS 0.10566
@@ -43,4 +49,22 @@ struct particle
     float mass;
     int color;
     int q3;
+    TLorentzVector p4v;
 };
+
+using namespace std;
+
+class particleBase
+{
+    private:
+        vector<particle> partLUT;
+
+    public:
+        particleBase();
+        ~particleBase();
+
+        particle getParticle(int pid);
+
+};
+
+#endif

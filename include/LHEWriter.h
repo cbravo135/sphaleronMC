@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 
+#include "particles.h"
 #include "TLorentzVector.h"
 
 using namespace std;
@@ -15,7 +16,7 @@ class LHEWriter
         LHEWriter(string fName);
         ~LHEWriter();
 
-        int writeEvent(vector<TLorentzVector> decayK, vector<int> decayPIDs, vector<int> decayColz);
+        int writeEvent(vector<particle> outParts);
         int close();
 
 };

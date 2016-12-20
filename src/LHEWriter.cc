@@ -19,32 +19,32 @@ LHEWriter::~LHEWriter()
 {
 }
 
-int LHEWriter::writeEvent(vector<TLorentzVector> decayK, vector<int> decayPIDs, vector<int> decayColz)
+int LHEWriter::writeEvent(vector<particle> outParts)
 {
     //cout << "size check: " << decayK.size() << "\t" << decayPIDs.size() << "\t" << decayColz.size() << endl;
     oF << "<event>" << endl;
-    oF << "\t" << decayK.size() << " 7000 1 -1 -1 -1" << endl;
-    for(int i = 0; i < int(decayK.size()); i++)
+    oF << "\t" << outParts.size() << " 7000 1 -1 -1 -1" << endl;
+    for(int i = 0; i < int(outParts.size()); i++)
     {
-        if(i < 2) oF << "\t" << decayPIDs.at(i) << "\t-1\t0\t0\t";
+        if(i < 2) oF << "\t" << outParts[i].pid << "\t-1\t0\t0\t";
         else 
         {
-            oF << "\t" << decayPIDs.at(i);
-            if(fabs(decayPIDs.at(i)) > 1000) oF << "\t2\t";
+            oF << "\t" << outParts[i].pid;
+            if(fabs(outParts[i].pid) > 1000) oF << "\t2\t";
             else oF << "\t1\t";
             if(i > 2 && i < 6) oF << "3\t3\t";
             else if(i > 6 && i < 10) oF << "7\t7\t";
             else oF << "1\t2\t";
         }
         
-        if(decayPIDs[i] > 0) oF << decayColz[i] << "\t0\t";
-        else oF << "0\t"  << decayColz[i] << "\t";
+        if(outParts[i].pid > 0) oF << outParts[i].color << "\t0\t";
+        else oF << "0\t"  << outParts[i].color << "\t";
 
-        oF << decayK[i].Px() << "\t";
-        oF << decayK[i].Py() << "\t";
-        oF << decayK[i].Pz() << "\t";
-        oF << decayK[i].E() << "\t";
-        oF << decayK[i].M() << "\t";
+        oF << outParts[i].p4v.Px() << "\t";
+        oF << outParts[i].p4v.Py() << "\t";
+        oF << outParts[i].p4v.Pz() << "\t";
+        oF << outParts[i].p4v.E() << "\t";
+        oF << outParts[i].p4v.M() << "\t";
         oF << "0\t9" << endl;
     }
     oF << "</event>" << endl;
