@@ -52,6 +52,7 @@ struct particle
     TLorentzVector p4v;
     int m1;
     int m2;
+    int ic;
 };
 
 using namespace std;

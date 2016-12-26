@@ -66,6 +66,9 @@ particle particleBase::getParticle(int pid)
     if(!(ss == 1 || ss == -1)) cout << "Something odd happened in particleBase::getParticle(int pid)" << endl;
     particle partBuf = partLUT[ii];
     partBuf.pid = pid; partBuf.q3 = ss*partBuf.q3;
+    partBuf.m1 = 0;
+    partBuf.m2 = 0;
+    partBuf.ic = 0;
     return partBuf;
 
 }

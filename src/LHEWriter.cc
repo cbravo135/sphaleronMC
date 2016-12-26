@@ -26,19 +26,29 @@ int LHEWriter::writeEvent(vector<particle> outParts)
     oF << "\t" << outParts.size() << " 7000 1 -1 -1 -1" << endl;
     for(int i = 0; i < int(outParts.size()); i++)
     {
-        if(i < 2) oF << "\t" << outParts[i].pid << "\t-1\t0\t0\t";
-        else 
+        oF << "\t" << outParts[i].pid;
+
+        if(i < 2) oF << "\t-1\t";
+        else if(fabs(outParts[i].pid) > 1000) oF << "\t2\t";
+        else oF << "\t1\t";
+        oF << outParts[i].m1 << "\t" << outParts[i].m2 << "\t";
+
+        if(fabs(outParts[i].pid) < 1000)
         {
-            oF << "\t" << outParts[i].pid;
-            if(fabs(outParts[i].pid) > 1000) oF << "\t2\t";
-            else oF << "\t1\t";
-            if(i > 2 && i < 6) oF << "3\t3\t";
-            else if(i > 6 && i < 10) oF << "7\t7\t";
-            else oF << "1\t2\t";
+            if(outParts[i].pid > 0) oF << outParts[i].color << "\t0\t";
+            else oF << "0\t"  << outParts[i].color << "\t";
         }
-        
-        if(outParts[i].pid > 0) oF << outParts[i].color << "\t0\t";
-        else oF << "0\t"  << outParts[i].color << "\t";
+        else
+        {
+            if(outParts[i].ic > 0) 
+            {
+                oF << outParts[i].color << "\t0\t";
+            }
+            else 
+            {
+                oF << "0\t"  << outParts[i].color << "\t";
+            }
+        }
 
         oF << outParts[i].p4v.Px() << "\t";
         oF << outParts[i].p4v.Py() << "\t";

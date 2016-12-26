@@ -193,6 +193,8 @@ int main(int argc, char* argv[])
         {
             TLorentzVector prod = *gen.GetDecay(ii);
             confBuf[ii].p4v = prod;
+            confBuf[ii].m1 = 0;
+            confBuf[ii].m2 = 0;
             if(confBuf[ii].color != 501 && confBuf[ii].color != 502 && fabs(confBuf[ii].pid) < 7) confBuf[ii].color = colNow++;
             if(fabs(confBuf[ii].pid) > 7) confBuf[ii].color = 0;
             int kinI = confBuf[ii].pid + 6;
@@ -227,6 +229,23 @@ int main(int argc, char* argv[])
                 else { qIg1.push_back(i); g1q.push_back(confBuf[i]); }
             }
         }
+        int interCol = 0;
+        int icolS = 0;
+        if(specParts.size() == 1)
+        {
+            if(specParts[0].color == 501) 
+            {
+                interCol = 502;
+                if(iq2 > 0) icolS = 1;
+                else icolS = -1;
+            }
+            if(specParts[0].color == 502) 
+            {
+                interCol = 501;
+                if(iq1 > 0) icolS = 1;
+                else icolS = -1;
+            }
+        }
 
         vector<particle> fileParts;
         fileParts.push_back(inParts[0]);
@@ -246,14 +265,30 @@ int main(int argc, char* argv[])
         particle interBuf;
         interBuf.mass = interP.M();
         interBuf.color = 0;
+        if(g3q.size() == 2) 
+        {
+            interBuf.color = interCol;
+            interBuf.ic = icolS;
+        }
         interBuf.p4v = interP;
         interBuf.q3 = interQ3;
+        interBuf.m1 = 1;
+        interBuf.m2 = 2;
         if(interQ3 == 0) interBuf.pid = 1000022; 
         if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3); 
         if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3); 
-        fileParts.push_back(interBuf);
+        if(g3q.size() > 1) fileParts.push_back(interBuf);
+        int interI = fileParts.size();
         for(int ii = 0; ii < g3q.size(); ii++)
         {
+            g3q[ii].m1 = interI;
+            g3q[ii].m2 = interI;
+            if(g3q.size() == 1) 
+            {
+                g3q[ii].m1 = 1;
+                g3q[ii].m2 = 2;
+                g3q[ii].ic = icolS;
+            }
             fileParts.push_back(g3q[ii]);
             daughters.push_back(g3q[ii].p4v);
         }
@@ -271,29 +306,75 @@ int main(int argc, char* argv[])
         daughters.push_back(interP);
         interBuf.mass = interP.M();
         interBuf.color = 0;
+        if(g2q.size() == 2) 
+        {
+            interBuf.color = interCol;
+            interBuf.ic = icolS;
+        }
         interBuf.p4v = interP;
         interBuf.q3 = interQ3;
         if(interQ3 == 0) interBuf.pid = 1000022; 
         if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3);
         if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3);
-        fileParts.push_back(interBuf);
+        if(g2q.size() > 1) fileParts.push_back(interBuf);
+        interI = fileParts.size();
         for(int ii = 0; ii < g2q.size(); ii++)
         {
+            g2q[ii].m1 = interI;
+            g2q[ii].m2 = interI;
+            if(g2q.size() == 1) 
+            {
+                g2q[ii].m1 = 1;
+                g2q[ii].m2 = 2;
+                g2q[ii].ic = icolS;
+            }
             fileParts.push_back(g2q[ii]);
             daughters.push_back(g2q[ii].p4v);
         }
 
         //Push first Gen quarks onto output stack
-        for(int i = 0; i < g1q.size(); i++)
+        interP.SetPxPyPzE(0.0,0.0,0.0,0.0);
+        interQ3 = 0;
+        for(int ii = 0; ii < g1q.size(); ii++)
         {
-            if(g1q[i].color == 501 || g3q[i].color == 502) continue;
-            fileParts.push_back(g1q[i]);
-            daughters.push_back(g1q[i].p4v);
+            if(g1q[ii].color == 501 || g1q[ii].color == 502) continue;
+            interP = interP + g1q[ii].p4v;
+            interQ3 += g1q[ii].q3;
+        }
+        sumInterQ3_h->Fill(interQ3);
+        daughters.push_back(interP);
+        interBuf.mass = interP.M();
+        interBuf.color = 0;
+        if(g1q.size() == 2) 
+        {
+            interBuf.color = interCol;
+            interBuf.ic = icolS;
+        }
+        interBuf.p4v = interP;
+        interBuf.q3 = interQ3;
+        if(interQ3 == 0) interBuf.pid = 1000022; 
+        if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3);
+        if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3);
+        if(g1q.size() > 1) fileParts.push_back(interBuf);
+        interI = fileParts.size();
+        for(int ii = 0; ii < g1q.size(); ii++)
+        {
+            g1q[ii].m1 = interI;
+            g1q[ii].m2 = interI;
+            if(g1q.size() == 1) 
+            {
+                g1q[ii].m1 = 1;
+                g1q[ii].m2 = 2;
+            }
+            fileParts.push_back(g1q[ii]);
+            daughters.push_back(g1q[ii].p4v);
         }
 
         //Push leptons onto output stack
         for(int i = 0; i < leps.size(); i++)
         {
+            leps[i].m1 = 1;
+            leps[i].m2 = 2;
             fileParts.push_back(leps[i]);
             daughters.push_back(leps[i].p4v);
         }
@@ -312,6 +393,7 @@ int main(int argc, char* argv[])
         myT->Fill();
         NF++;
         if(NF%(Nevt/10) == 0) cout << "Produced Event " << NF << "  pdfN : " << pdfN << endl;
+        //cout << "Produced Event " << NF << "  pdfN : " << pdfN << endl;
     }
 
     cout << "Max Weight: " << maxwt << endl;
