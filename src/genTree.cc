@@ -11,6 +11,7 @@
 #include "TFile.h"
 #include "TF1.h"
 #include "TH1.h"
+#include "TString.h"
 
 #include "../include/configBuilder.h"
 #include "../include/genTree.h"
@@ -20,7 +21,7 @@
 
 #define ARGS 4
 #define SQRTS 13000.0
-#define MCW 3.6e-5
+#define MCW 3.8e-5
 
 using namespace std;
 
@@ -40,7 +41,6 @@ int main(int argc, char* argv[])
     double maxwt = 0;
 
     int NF = 0;
-    vector<double> m2;
     TRandom3 rand;
     rand.SetSeed(0);
     particleBase *partBase = new particleBase();
@@ -61,27 +61,34 @@ int main(int argc, char* argv[])
     double momM = 0.0;
     double pz = 0.0;
 
-
     TFile *myF = new TFile((ofName+".root").c_str(),"RECREATE","Holds daughters from sphaleron decay");
     LHEWriter lheF(ofName);
 
     double minx = thr*thr/(SQRTS*SQRTS);
 
-    //TF1 pdfu("pdfu","5.1072*(x^(0.8))*(1-x)^3/x",thr*thr/13000.0*13000.0,1.0);
-    TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",minx,1.0);
+    //TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",minx,1.0);
 
-    c_mstwpdf *pdf = new c_mstwpdf("/afs/cern.ch/user/b/bravo/work/sphaleron/mc/toy/mstw2008/Grids/mstw2008nnlo.00.dat");
+    c_mstwpdf *pdf = new c_mstwpdf("../mstw2008/Grids/mstw2008nnlo.00.dat");
     double maxMCtot = 0.0;
 
     TH1D *x1_h = new TH1D("x1_h","x1 inclusive",1000,0.0,1.0);
     TH1D *mcTot_h = new TH1D("mcTot_h","Monte Carlo Probabilities",100,0.0,MCW);
     TH1D *sumInterQ3_h = new TH1D("sumInterQ3_h","Intermidiate particle charges",21,-10.5,10.5);
-    //protonPDF proton("../mstw2008/Grids/mstw2008nnlo.00.dat",SQRTS,minx);
+    vector<TH1D> pt_hv;
+    for(int iq = -6; iq < 7; iq++)
+    {
+        string nameBuf;
+        string titBuf;
+        titBuf = Form("Quark %i p_{T};p_{T} [GeV];Entries / 10 GeV",iq);
+        if(iq < 0) nameBuf = Form("iqm%i_h",int(fabs(iq)));
+        else nameBuf = Form("iqp%i_h",int(fabs(iq)));
+        TH1D hBuf(nameBuf.c_str(),titBuf.c_str(),200,0.0,2000.0);
+        pt_hv.push_back(hBuf);
+    }
 
     TTree *myT = new TTree("mcTree","mcTree");
     myT->Branch("daughters",&daughters); 
     myT->Branch("weight",&weight); 
-    myT->Branch("m2",&m2); 
     myT->Branch("pz",&pz); 
     myT->Branch("x1",&x1); 
     myT->Branch("x2",&x2); 
@@ -97,7 +104,6 @@ int main(int argc, char* argv[])
     while(NF < Nevt)
     {
         daughters.clear();
-        m2.clear();
 
         Q2 = 0.0;
         double mcP = 1.1;
@@ -128,9 +134,6 @@ int main(int argc, char* argv[])
                     iq2 = i2;
                     double x2p = pdf->parton(iq2,x2,SQRTS);
                     mcTot += x1p*x2p;
-                    //cout << "MC Total: " << mcTot << endl;
-                    //cout << "iq1: " << iq1 << endl;
-                    //cout << "iq2: " << iq2 << endl;
                     if(mcTot > mcP) {mcPass = true; break;}
                 }
                 if(mcPass) break;
@@ -142,8 +145,6 @@ int main(int argc, char* argv[])
         }
 
         vector<particle> inParts;
-        vector<int> decayPID;
-        vector<int> decayColz;
 
         //Build incoming particles, sphaleron, and prepare to decay
         particle partBuf = partBase->getParticle(iq1);
@@ -157,12 +158,7 @@ int main(int argc, char* argv[])
         partBuf.p4v.SetXYZM(0.0,0.0,x2*(-6500),partBuf.mass);
         inParts.push_back(partBuf); //Push second incoming quark
 
-        decayPID.push_back(iq1);
-        decayColz.push_back(501);
-        decayPID.push_back(iq2);
-        decayColz.push_back(502);
         int colNow = 503;
-        int colNowNew = 503;
 
         particle mother;
         mother.p4v = inParts[0].p4v + inParts[1].p4v;
@@ -193,14 +189,14 @@ int main(int argc, char* argv[])
         }
 
         //Extract Decay 4-vectors and assign colors to non-spectator quarks
-        vector<TLorentzVector> decayBuf;
         for(int ii = 0; ii < confBuf.size(); ii++)
         {
             TLorentzVector prod = *gen.GetDecay(ii);
             confBuf[ii].p4v = prod;
-            if(confBuf[ii].color != 501 && confBuf[ii].color != 502 && fabs(confBuf[ii].pid) < 7) confBuf[ii].color = colNowNew++;
+            if(confBuf[ii].color != 501 && confBuf[ii].color != 502 && fabs(confBuf[ii].pid) < 7) confBuf[ii].color = colNow++;
             if(fabs(confBuf[ii].pid) > 7) confBuf[ii].color = 0;
-            decayBuf.push_back(prod);
+            int kinI = confBuf[ii].pid + 6;
+            if(confBuf[ii].color != 501 && confBuf[ii].color != 502 && fabs(confBuf[ii].pid) < 7) pt_hv[kinI].Fill(confBuf[ii].p4v.Pt());
         }
 
         vector<particle> g1q;
@@ -247,22 +243,19 @@ int main(int argc, char* argv[])
         }
         sumInterQ3_h->Fill(interQ3);
         daughters.push_back(interP);
-        decayColz.push_back(0);
         particle interBuf;
         interBuf.mass = interP.M();
         interBuf.color = 0;
         interBuf.p4v = interP;
         interBuf.q3 = interQ3;
-        if(interQ3 == 0) { decayPID.push_back(1000022); interBuf.pid = 1000022; }
-        if(fabs(interQ3) == 3) { decayPID.push_back(interQ3*1006213/fabs(interQ3)); interBuf.pid = interQ3*1006213/fabs(interQ3); }
-        if(fabs(interQ3) == 6) { decayPID.push_back(interQ3*1006223/fabs(interQ3)); interBuf.pid = interQ3*1006223/fabs(interQ3); }
+        if(interQ3 == 0) interBuf.pid = 1000022; 
+        if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3); 
+        if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3); 
         fileParts.push_back(interBuf);
         for(int ii = 0; ii < g3q.size(); ii++)
         {
             fileParts.push_back(g3q[ii]);
-            daughters.push_back(decayBuf[qIg3[ii]]);
-            decayColz.push_back(colNow++);
-            decayPID.push_back(confBuf[qIg3[ii]].pid);
+            daughters.push_back(g3q[ii].p4v);
         }
 
         //Push second Gen quarks onto output stack
@@ -276,21 +269,18 @@ int main(int argc, char* argv[])
         }
         sumInterQ3_h->Fill(interQ3);
         daughters.push_back(interP);
-        decayColz.push_back(0);
         interBuf.mass = interP.M();
         interBuf.color = 0;
         interBuf.p4v = interP;
         interBuf.q3 = interQ3;
-        if(interQ3 == 0) { decayPID.push_back(1000022); interBuf.pid = 1000022; }
-        if(fabs(interQ3) == 3) { decayPID.push_back(interQ3*1006213/fabs(interQ3)); interBuf.pid = interQ3*1006213/fabs(interQ3); }
-        if(fabs(interQ3) == 6) { decayPID.push_back(interQ3*1006223/fabs(interQ3)); interBuf.pid = interQ3*1006223/fabs(interQ3); }
+        if(interQ3 == 0) interBuf.pid = 1000022; 
+        if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3);
+        if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3);
         fileParts.push_back(interBuf);
         for(int ii = 0; ii < g2q.size(); ii++)
         {
             fileParts.push_back(g2q[ii]);
-            daughters.push_back(decayBuf[qIg2[ii]]);
-            decayColz.push_back(colNow++);
-            decayPID.push_back(confBuf[qIg2[ii]].pid);
+            daughters.push_back(g2q[ii].p4v);
         }
 
         //Push first Gen quarks onto output stack
@@ -298,35 +288,18 @@ int main(int argc, char* argv[])
         {
             if(g1q[i].color == 501 || g3q[i].color == 502) continue;
             fileParts.push_back(g1q[i]);
-            daughters.push_back(decayBuf[qIg1[i]]);
-            if(confBuf.size() == 12 && qIg1.size() - (i+1) == 0) decayColz.push_back(501);
-            else if(confBuf.size() == 14 && qIg1.size() - (i+1) < 2) decayColz.push_back(501 + qIg1.size() - (i+1));
-            else decayColz.push_back(colNow++);
-            decayPID.push_back(confBuf[qIg1[i]].pid);
+            daughters.push_back(g1q[i].p4v);
         }
 
         //Push leptons onto output stack
         for(int i = 0; i < leps.size(); i++)
         {
             fileParts.push_back(leps[i]);
-            daughters.push_back(decayBuf[lepI[i]]);
-            decayColz.push_back(0);
-            decayPID.push_back(confBuf[lepI[i]].pid);
+            daughters.push_back(leps[i].p4v);
         }
 
         //Push spectator Quarks if there are any
         for(int i = 0; i < specParts.size(); i++) fileParts.push_back(specParts[i]);
-
-        TLorentzVector p[20];
-
-        for(int i = 0; i < confBuf.size(); i++)
-        {
-            for(int ii = 0; ii < confBuf.size(); ii++)
-            {
-                if(i != ii) p[i] = p[i] + daughters[ii];
-            }
-            m2.push_back(p[i].M2());
-        }
 
         if(weight > maxwt) 
         {
@@ -347,7 +320,10 @@ int main(int argc, char* argv[])
     myF->cd();
     x1_h->Write();
     mcTot_h->Write();
-    pdfu.Write();
+    for(int i = 0; i < pt_hv.size(); i++)
+    {
+        pt_hv[i].Write();
+    }
     myT->Write();
     myF->Close();
 

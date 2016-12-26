@@ -50,6 +50,8 @@ struct particle
     int color;
     int q3;
     TLorentzVector p4v;
+    int m1;
+    int m2;
 };
 
 using namespace std;
