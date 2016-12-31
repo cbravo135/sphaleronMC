@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
     //TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",minx,1.0);
 
-    c_mstwpdf *pdf = new c_mstwpdf("../mstw2008/Grids/mstw2008nnlo.00.dat");
+    c_mstwpdf *pdf = new c_mstwpdf("/afs/cern.ch/user/b/bravo/work/sphaleron/mc/toy/mstw2008/Grids/mstw2008nnlo.00.dat");
     double maxMCtot = 0.0;
 
     TH1D *x1_h = new TH1D("x1_h","x1 inclusive",1000,0.0,1.0);
@@ -215,7 +215,13 @@ int main(int argc, char* argv[])
         //Seperate leptons and quarks
         for(int i = 0; i < confBuf.size(); i++)
         {
-            if(confBuf[i].color == 501 || confBuf[i].color == 502) { specParts.push_back(confBuf[i]); continue; }
+            if(confBuf[i].color == 501 || confBuf[i].color == 502) 
+            { 
+                confBuf[i].m1 = 1;
+                confBuf[i].m2 = 2;
+                specParts.push_back(confBuf[i]); 
+                continue; 
+            }
             if(fabs(confBuf[i].pid) > 7) //lepton
             {
                 leps.push_back(confBuf[i]);
