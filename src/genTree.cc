@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
     //TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",minx,1.0);
 
     c_mstwpdf *pdf = new c_mstwpdf("/afs/cern.ch/user/b/bravo/work/sphaleron/mc/toy/mstw2008/Grids/mstw2008nnlo.00.dat");
+    //c_mstwpdf *pdf = new c_mstwpdf("../mstw2008/Grids/mstw2008nnlo.00.dat");
     double maxMCtot = 0.0;
 
     TH1D *x1_h = new TH1D("x1_h","x1 inclusive",1000,0.0,1.0);
@@ -257,6 +258,19 @@ int main(int argc, char* argv[])
         fileParts.push_back(inParts[0]);
         fileParts.push_back(inParts[1]);
 
+        //Calculate color flow case
+        int specN = specParts.size();
+        vector<particle> anParts;
+        for(int i = 0; i < inParts.size(); i++)
+        {
+            bool mF = false;
+            for(int ii = 0; ii < specParts.size(); ii++) if(inParts[i].color == specParts[ii].color) mF = true;
+            if(!mF) anParts.push_back(inParts[i]);
+        }
+        bool dcg3 = (specParts.size() == 0 && g3q.size() == 2);
+        bool dcg2 = (specParts.size() == 0 && g2q.size() == 2);
+        bool dcg1 = (specParts.size() == 0 && g1q.size() == 2);
+
         //Push third Gen quarks and fake susy mediator onto output stack
         TLorentzVector interP(0.0,0.0,0.0,0.0);
         int interQ3 = 0;
@@ -283,13 +297,14 @@ int main(int argc, char* argv[])
         if(interQ3 == 0) interBuf.pid = 1000022; 
         if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3); 
         if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3); 
-        if(g3q.size() > 1) fileParts.push_back(interBuf);
+        bool useInter = (g3q.size() == 3 || dcg3);
+        if(useInter) fileParts.push_back(interBuf);
         int interI = fileParts.size();
         for(int ii = 0; ii < g3q.size(); ii++)
         {
             g3q[ii].m1 = interI;
             g3q[ii].m2 = interI;
-            if(g3q.size() == 1) 
+            if(!useInter) 
             {
                 g3q[ii].m1 = 1;
                 g3q[ii].m2 = 2;
@@ -322,13 +337,14 @@ int main(int argc, char* argv[])
         if(interQ3 == 0) interBuf.pid = 1000022; 
         if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3);
         if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3);
-        if(g2q.size() > 1) fileParts.push_back(interBuf);
+        useInter = (g2q.size() == 3 || (dcg2 && dcg1));
+        if(useInter) fileParts.push_back(interBuf);
         interI = fileParts.size();
         for(int ii = 0; ii < g2q.size(); ii++)
         {
             g2q[ii].m1 = interI;
             g2q[ii].m2 = interI;
-            if(g2q.size() == 1) 
+            if(!useInter) 
             {
                 g2q[ii].m1 = 1;
                 g2q[ii].m2 = 2;
@@ -361,13 +377,14 @@ int main(int argc, char* argv[])
         if(interQ3 == 0) interBuf.pid = 1000022; 
         if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3);
         if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3);
-        if(g1q.size() > 1) fileParts.push_back(interBuf);
+        useInter = (g1q.size() == 3);
+        if(useInter) fileParts.push_back(interBuf);
         interI = fileParts.size();
         for(int ii = 0; ii < g1q.size(); ii++)
         {
             g1q[ii].m1 = interI;
             g1q[ii].m2 = interI;
-            if(g1q.size() == 1) 
+            if(!useInter) 
             {
                 g1q[ii].m1 = 1;
                 g1q[ii].m2 = 2;
