@@ -297,6 +297,11 @@ int main(int argc, char* argv[])
         if(interQ3 == 0) interBuf.pid = 1000022; 
         if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3); 
         if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3); 
+        if(dcg3) for(int i = 0; i < anParts.size(); i++) if(fabs(anParts[i].pid) == 5 || fabs(anParts[i].pid) == 6)
+        {
+            interBuf.pid = anParts[i].pid;
+            interBuf.color = anParts[i].color;
+        }
         bool useInter = (g3q.size() == 3 || dcg3);
         if(useInter) fileParts.push_back(interBuf);
         int interI = fileParts.size();
@@ -337,6 +342,11 @@ int main(int argc, char* argv[])
         if(interQ3 == 0) interBuf.pid = 1000022; 
         if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3);
         if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3);
+        if(dcg2 && dcg1) for(int i = 0; i < anParts.size(); i++) if(fabs(anParts[i].pid) == 3 || fabs(anParts[i].pid) == 4)
+        {
+            interBuf.pid = anParts[i].pid;
+            interBuf.color = anParts[i].color;
+        }
         useInter = (g2q.size() == 3 || (dcg2 && dcg1));
         if(useInter) fileParts.push_back(interBuf);
         interI = fileParts.size();
