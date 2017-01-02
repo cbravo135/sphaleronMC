@@ -421,7 +421,6 @@ int main(int argc, char* argv[])
             cout << "MaxWt: " << maxwt << endl;
         }
 
-
         lheF.writeEvent(fileParts);
         myT->Fill();
         NF++;

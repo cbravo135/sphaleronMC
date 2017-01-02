@@ -29,7 +29,7 @@ int LHEWriter::writeEvent(vector<particle> outParts)
         oF << "\t" << outParts[i].pid;
 
         if(i < 2) oF << "\t-1\t";
-        else if(fabs(outParts[i].pid) > 1000) oF << "\t2\t";
+        else if(fabs(outParts[i].pid) > 1000 || ( i < outParts.size() - 2 && (outParts[i].color == 501 || outParts[i].color == 502) ) ) oF << "\t2\t";
         else oF << "\t1\t";
         oF << outParts[i].m1 << "\t" << outParts[i].m2 << "\t";
 
