@@ -11,6 +11,7 @@
 #include "TFile.h"
 #include "TF1.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TString.h"
 
 #include "../include/configBuilder.h"
@@ -74,17 +75,38 @@ int main(int argc, char* argv[])
 
     TH1D *x1_h = new TH1D("x1_h","x1 inclusive",1000,0.0,1.0);
     TH1D *mcTot_h = new TH1D("mcTot_h","Monte Carlo Probabilities",100,0.0,MCW);
-    TH1D *sumInterQ3_h = new TH1D("sumInterQ3_h","Intermidiate particle charges",21,-10.5,10.5);
+    TH1D *sumInterQ3_h = new TH1D("sumInterQ3_h","Intermediate particle charges",21,-10.5,10.5);
+    TH1D *sphM_h = new TH1D("sphM_h","Sphaleron Mass;Invariant Mass [GeV];Events / 100 GeV",40,9000.0,SQRTS);
+    TH1D *sphPz_h = new TH1D("sphPz_h","Sphaleron p_{z};p_{z} [GeV];Events / 100 GeV",80,-4000.0,4000.0);
+    TH1D *outID_h = new TH1D("outID_h","Outgoing PDG IDs;PDG ID;Entries",33,-16.5,16.5);
+    TH1D *moFrac_h = new TH1D("moFrac_h","Parton 1 Momentum Fraction;x_{1};Events / 0.01",60,0.4,1.0);
+
+    TH2D *inQid_h = new TH2D("inQid_h","Colliding Parton Species;Parton 2 PDG ID;Parton 1 PDG ID",11,-5.5,5.5,11,-5.5,5.5);
+
     vector<TH1D> pt_hv;
+    vector<TH1D> eta_hv;
+    vector<TH1D> phi_hv;
     for(int iq = -6; iq < 7; iq++)
     {
         string nameBuf;
         string titBuf;
         titBuf = Form("Quark %i p_{T};p_{T} [GeV];Entries / 10 GeV",iq);
-        if(iq < 0) nameBuf = Form("iqm%i_h",int(fabs(iq)));
-        else nameBuf = Form("iqp%i_h",int(fabs(iq)));
-        TH1D hBuf(nameBuf.c_str(),titBuf.c_str(),200,0.0,2000.0);
-        pt_hv.push_back(hBuf);
+        if(iq < 0) nameBuf = Form("pt_iqm%i_h",int(fabs(iq)));
+        else nameBuf = Form("pt_iqp%i_h",int(fabs(iq)));
+        TH1D hBufpt(nameBuf.c_str(),titBuf.c_str(),200,0.0,2000.0);
+        pt_hv.push_back(hBufpt);
+
+        titBuf = Form("Quark %i #eta;#eta;Entries / 0.1",iq);
+        if(iq < 0) nameBuf = Form("eta_iqm%i_h",int(fabs(iq)));
+        else nameBuf = Form("eta_iqp%i_h",int(fabs(iq)));
+        TH1D hBufeta(nameBuf.c_str(),titBuf.c_str(),100,-5,5);
+        eta_hv.push_back(hBufeta);
+
+        titBuf = Form("Quark %i #phi;#phi;Entries / 0.1",iq);
+        if(iq < 0) nameBuf = Form("phi_iqm%i_h",int(fabs(iq)));
+        else nameBuf = Form("phi_iqp%i_h",int(fabs(iq)));
+        TH1D hBufphi(nameBuf.c_str(),titBuf.c_str(),64,-3.2,3.2);
+        phi_hv.push_back(hBufphi);
     }
 
     TTree *myT = new TTree("mcTree","mcTree");
@@ -199,7 +221,13 @@ int main(int argc, char* argv[])
             if(confBuf[ii].color != 501 && confBuf[ii].color != 502 && fabs(confBuf[ii].pid) < 7) confBuf[ii].color = colNow++;
             if(fabs(confBuf[ii].pid) > 7) confBuf[ii].color = 0;
             int kinI = confBuf[ii].pid + 6;
-            if(confBuf[ii].color != 501 && confBuf[ii].color != 502 && fabs(confBuf[ii].pid) < 7) pt_hv[kinI].Fill(confBuf[ii].p4v.Pt());
+            if(confBuf[ii].color != 501 && confBuf[ii].color != 502 && fabs(confBuf[ii].pid) < 7) 
+            {
+                pt_hv[kinI].Fill(confBuf[ii].p4v.Pt());
+                eta_hv[kinI].Fill(confBuf[ii].p4v.Eta());
+                phi_hv[kinI].Fill(confBuf[ii].p4v.Phi());
+            }
+            outID_h->Fill(confBuf[ii].pid);
         }
 
         vector<particle> g1q;
@@ -421,6 +449,11 @@ int main(int argc, char* argv[])
             cout << "MaxWt: " << maxwt << endl;
         }
 
+        inQid_h->Fill(iq2,iq1);
+        sphM_h->Fill(momM);
+        sphPz_h->Fill(pz);
+        moFrac_h->Fill(x1);
+
         lheF.writeEvent(fileParts);
         myT->Fill();
         NF++;
@@ -434,9 +467,15 @@ int main(int argc, char* argv[])
     myF->cd();
     x1_h->Write();
     mcTot_h->Write();
+    inQid_h->Write();
+    outID_h->Write();
+    sphM_h->Write();
+    sphPz_h->Write();
     for(int i = 0; i < pt_hv.size(); i++)
     {
         pt_hv[i].Write();
+        eta_hv[i].Write();
+        phi_hv[i].Write();
     }
     myT->Write();
     myF->Close();
