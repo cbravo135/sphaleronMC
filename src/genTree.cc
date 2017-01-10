@@ -79,9 +79,11 @@ int main(int argc, char* argv[])
     TH1D *sphM_h = new TH1D("sphM_h","Sphaleron Mass;Invariant Mass [GeV];Events / 100 GeV",40,9000.0,SQRTS);
     TH1D *sphPz_h = new TH1D("sphPz_h","Sphaleron p_{z};p_{z} [GeV];Events / 100 GeV",80,-4000.0,4000.0);
     TH1D *outID_h = new TH1D("outID_h","Outgoing PDG IDs;PDG ID;Entries",33,-16.5,16.5);
-    TH1D *moFrac_h = new TH1D("moFrac_h","Parton 1 Momentum Fraction;x_{1};Events / 0.01",60,0.4,1.0);
+    TH1D *p1x_h = new TH1D("p1x_h","Parton 1 Momentum Fraction;x_{1};Events / 0.01",60,0.4,1.0);
+    TH1D *p1id_h = new TH1D("p1id_h","Parton 1 PDG ID;PDG ID;Events",13,-6.5,6.5);
 
     TH2D *inQid_h = new TH2D("inQid_h","Colliding Parton Species;Parton 2 PDG ID;Parton 1 PDG ID",11,-5.5,5.5,11,-5.5,5.5);
+    TH2D *frac2D_h = new TH2D("frac2D_h","Parton Momentum Fractions;x_{2};x_{1}",60,0.4,1.0,60,0.4,1.0);
 
     vector<TH1D> pt_hv;
     vector<TH1D> eta_hv;
@@ -90,10 +92,10 @@ int main(int argc, char* argv[])
     {
         string nameBuf;
         string titBuf;
-        titBuf = Form("Quark %i p_{T};p_{T} [GeV];Entries / 10 GeV",iq);
+        titBuf = Form("Quark %i p_{T};p_{T} [GeV];Entries / 20 GeV",iq);
         if(iq < 0) nameBuf = Form("pt_iqm%i_h",int(fabs(iq)));
         else nameBuf = Form("pt_iqp%i_h",int(fabs(iq)));
-        TH1D hBufpt(nameBuf.c_str(),titBuf.c_str(),200,0.0,2000.0);
+        TH1D hBufpt(nameBuf.c_str(),titBuf.c_str(),200,0.0,4000.0);
         pt_hv.push_back(hBufpt);
 
         titBuf = Form("Quark %i #eta;#eta;Entries / 0.1",iq);
@@ -450,9 +452,11 @@ int main(int argc, char* argv[])
         }
 
         inQid_h->Fill(iq2,iq1);
+        frac2D_h->Fill(x2,x1);
         sphM_h->Fill(momM);
         sphPz_h->Fill(pz);
-        moFrac_h->Fill(x1);
+        p1x_h->Fill(x1);
+        p1id_h->Fill(iq1);
 
         lheF.writeEvent(fileParts);
         myT->Fill();
@@ -468,6 +472,9 @@ int main(int argc, char* argv[])
     x1_h->Write();
     mcTot_h->Write();
     inQid_h->Write();
+    frac2D_h->Write();
+    p1x_h->Write();
+    p1id_h->Write();
     outID_h->Write();
     sphM_h->Write();
     sphPz_h->Write();
