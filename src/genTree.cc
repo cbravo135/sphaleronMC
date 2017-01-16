@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
         titBuf = Form("Quark %i p_{T};p_{T} [GeV];Entries / 20 GeV",iq);
         if(iq < 0) nameBuf = Form("pt_iqm%i_h",int(fabs(iq)));
         else nameBuf = Form("pt_iqp%i_h",int(fabs(iq)));
-        TH1D hBufpt(nameBuf.c_str(),titBuf.c_str(),200,0.0,4000.0);
+        TH1D hBufpt(nameBuf.c_str(),titBuf.c_str(),250,0.0,5000.0);
         pt_hv.push_back(hBufpt);
 
         titBuf = Form("Quark %i #eta;#eta;Entries / 0.1",iq);
@@ -327,12 +327,12 @@ int main(int argc, char* argv[])
         if(interQ3 == 0) interBuf.pid = 1000022; 
         if(fabs(interQ3) == 3) interBuf.pid = interQ3*1006213/fabs(interQ3); 
         if(fabs(interQ3) == 6) interBuf.pid = interQ3*1006223/fabs(interQ3); 
-        if(dcg3) for(int i = 0; i < anParts.size(); i++) if(fabs(anParts[i].pid) == 5 || fabs(anParts[i].pid) == 6)
+        if(g3q.size() == 2) for(int i = 0; i < anParts.size(); i++) if(fabs(anParts[i].pid) == 5 || fabs(anParts[i].pid) == 6)
         {
             interBuf.pid = anParts[i].pid;
             interBuf.color = anParts[i].color;
         }
-        bool useInter = (g3q.size() == 3 || dcg3);
+        bool useInter = (g3q.size() > 1);
         if(useInter) fileParts.push_back(interBuf);
         int interI = fileParts.size();
         for(int ii = 0; ii < g3q.size(); ii++)
