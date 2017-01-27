@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#include "LHAPDF/LHAPDF.h"
+
 #include "TLorentzVector.h"
 #include "TGenPhaseSpace.h"
 #include "TRandom3.h"
@@ -22,8 +24,9 @@
 
 #define ARGS 4
 #define SQRTS 13000.0
-#define MCW 3.8e-5
+#define MCW 0.00016
 
+using namespace LHAPDF;
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -69,6 +72,9 @@ int main(int argc, char* argv[])
 
     //TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",minx,1.0);
 
+    const PDF* LHApdf = mkPDF("NNPDF30_nlo_nf_5_pdfas",0);
+    cout << LHApdf->xfxQ2(2, 0.5, SQRTS*SQRTS) << endl;
+
     c_mstwpdf *pdf = new c_mstwpdf("/afs/cern.ch/user/b/bravo/work/sphaleron/mc/toy/mstw2008/Grids/mstw2008nnlo.00.dat");
     //c_mstwpdf *pdf = new c_mstwpdf("../mstw2008/Grids/mstw2008nnlo.00.dat");
     double maxMCtot = 0.0;
@@ -76,7 +82,7 @@ int main(int argc, char* argv[])
     TH1D *x1_h = new TH1D("x1_h","x1 inclusive",1000,0.0,1.0);
     TH1D *mcTot_h = new TH1D("mcTot_h","Monte Carlo Probabilities",100,0.0,MCW);
     TH1D *sumInterQ3_h = new TH1D("sumInterQ3_h","Intermediate particle charges",21,-10.5,10.5);
-    TH1D *sphM_h = new TH1D("sphM_h","Sphaleron Mass;Invariant Mass [GeV];Events / 100 GeV",40,9000.0,SQRTS);
+    TH1D *sphM_h = new TH1D("sphM_h","Sphaleron Mass;Invariant Mass [GeV];Events / 100 GeV",50,8000.0,SQRTS);
     TH1D *sphPz_h = new TH1D("sphPz_h","Sphaleron p_{z};p_{z} [GeV];Events / 100 GeV",80,-4000.0,4000.0);
     TH1D *outID_h = new TH1D("outID_h","Outgoing PDG IDs;PDG ID;Entries",33,-16.5,16.5);
     TH1D *p1x_h = new TH1D("p1x_h","Parton 1 Momentum Fraction;x_{1};Events / 0.01",60,0.4,1.0);
@@ -152,12 +158,14 @@ int main(int argc, char* argv[])
             {
                 if(i1 == 0) continue;
                 iq1 = i1;
-                double x1p = pdf->parton(iq1,x1,SQRTS);
+                //double x1p = pdf->parton(iq1,x1,SQRTS);
+                double x1p = LHApdf->xfxQ2(iq1, x1, Q2)/x1;
                 for(int i2 = -5; i2 < 6; i2++)
                 {
                     if(i2 == 0) continue;
                     iq2 = i2;
-                    double x2p = pdf->parton(iq2,x2,SQRTS);
+                    //double x2p = pdf->parton(iq2,x2,SQRTS);
+                    double x2p = LHApdf->xfxQ2(iq2, x2, Q2)/x2;
                     mcTot += x1p*x2p;
                     if(mcTot > mcP) {mcPass = true; break;}
                 }
@@ -458,7 +466,7 @@ int main(int argc, char* argv[])
         p1x_h->Fill(x1);
         p1id_h->Fill(iq1);
 
-        lheF.writeEvent(fileParts);
+        lheF.writeEvent(fileParts,sqrt(Q2));
         myT->Fill();
         NF++;
         if(NF%(Nevt/10) == 0) cout << "Produced Event " << NF << "  pdfN : " << pdfN << endl;

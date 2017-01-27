@@ -12,4 +12,4 @@ libMyLib.so: MyDict.cxx
 	g++ -shared -o$@ `root-config --ldflags` $(CXXFLAGS) -I$(ROOTSYS)/include $^
 
 genTree: MyDict.cxx $(SRCS)
-	g++ $(CXXFLAGS) $(SRCS) -o $@ $(GLIBS) 
+	g++ $(CXXFLAGS) $(SRCS) -o $@ -I$(HOME)/local/include/ $(GLIBS) `lhapdf-config --cflags --ldflags`

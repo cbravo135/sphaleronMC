@@ -16,7 +16,7 @@ class LHEWriter
         LHEWriter(string fName);
         ~LHEWriter();
 
-        int writeEvent(vector<particle> outParts);
+        int writeEvent(vector<particle> outParts, double Q);
         int close();
 
 };

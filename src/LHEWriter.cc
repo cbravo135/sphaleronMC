@@ -10,8 +10,8 @@ LHEWriter::LHEWriter(string fName)
     oF << "<header>" << endl;
     oF << "</header>" << endl;
     oF << "<init>" << endl;
-    oF << "\t2212 2212 0.65000000000e+04 0.65000000000e+04 -1 -1 -1 -1 3 1" << endl;
-    oF << "\t0.1e+01 0.1e-01 0.1e-02 7000" << endl;
+    oF << "\t2212 2212 0.65000000000e+04 0.65000000000e+04 292200 292200 292200 292200 3 1" << endl;//beam conditions information
+    oF << "\t7.3 1.0 1.0 7000" << endl;//sphaleron process information
     oF << "</init>" << endl;
 }
 
@@ -19,11 +19,11 @@ LHEWriter::~LHEWriter()
 {
 }
 
-int LHEWriter::writeEvent(vector<particle> outParts)
+int LHEWriter::writeEvent(vector<particle> outParts, double Q)
 {
     //cout << "size check: " << decayK.size() << "\t" << decayPIDs.size() << "\t" << decayColz.size() << endl;
     oF << "<event>" << endl;
-    oF << "\t" << outParts.size() << " 7000 1 -1 -1 -1" << endl;
+    oF << "\t" << outParts.size() << " 7000 1 "<< Q << " 7.3e-03 0.118" << endl;
     for(int i = 0; i < int(outParts.size()); i++)
     {
         oF << "\t" << outParts[i].pid;
