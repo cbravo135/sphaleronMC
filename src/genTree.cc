@@ -24,7 +24,7 @@
 
 #define ARGS 4
 #define SQRTS 13000.0
-#define MCW 0.00016
+#define MCW 0.00060
 
 using namespace LHAPDF;
 using namespace std;
@@ -72,7 +72,8 @@ int main(int argc, char* argv[])
 
     //TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",minx,1.0);
 
-    const PDF* LHApdf = mkPDF("NNPDF30_nlo_nf_5_pdfas",0);
+    //const PDF* LHApdf = mkPDF("NNPDF30_nlo_nf_5_pdfas",0);
+    const PDF* LHApdf = mkPDF("NNPDF30_lo_as_0118",0);
     cout << LHApdf->xfxQ2(2, 0.5, SQRTS*SQRTS) << endl;
 
     c_mstwpdf *pdf = new c_mstwpdf("/afs/cern.ch/user/b/bravo/work/sphaleron/mc/toy/mstw2008/Grids/mstw2008nnlo.00.dat");
