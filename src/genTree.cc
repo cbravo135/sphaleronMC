@@ -14,6 +14,7 @@
 #include "TF1.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TMath.h"
 #include "TString.h"
 
 #include "../include/configBuilder.h"
@@ -24,7 +25,7 @@
 
 #define ARGS 4
 #define SQRTS 13000.0
-#define MCW 0.00060
+#define MPW 5.0e-7
 
 using namespace LHAPDF;
 using namespace std;
@@ -39,7 +40,7 @@ int main(int argc, char* argv[])
     }
 
     float thr = atof(argv[1]);
-    float maxW = atof(argv[2]);
+    float MCW = atof(argv[2]);
     int Nevt = atoi(argv[3]);
     string ofName = string(argv[4]);
     double maxwt = 0;
@@ -76,14 +77,14 @@ int main(int argc, char* argv[])
     const PDF* LHApdf = mkPDF("NNPDF30_lo_as_0118",0);
     cout << LHApdf->xfxQ2(2, 0.5, SQRTS*SQRTS) << endl;
 
-    c_mstwpdf *pdf = new c_mstwpdf("/afs/cern.ch/user/b/bravo/work/sphaleron/mc/toy/mstw2008/Grids/mstw2008nnlo.00.dat");
+    //c_mstwpdf *pdf = new c_mstwpdf("/afs/cern.ch/user/b/bravo/work/sphaleron/mc/toy/mstw2008/Grids/mstw2008nnlo.00.dat");
     //c_mstwpdf *pdf = new c_mstwpdf("../mstw2008/Grids/mstw2008nnlo.00.dat");
     double maxMCtot = 0.0;
 
     TH1D *x1_h = new TH1D("x1_h","x1 inclusive",1000,0.0,1.0);
     TH1D *mcTot_h = new TH1D("mcTot_h","Monte Carlo Probabilities",100,0.0,MCW);
     TH1D *sumInterQ3_h = new TH1D("sumInterQ3_h","Intermediate particle charges",21,-10.5,10.5);
-    TH1D *sphM_h = new TH1D("sphM_h","Sphaleron Mass;Invariant Mass [GeV];Events / 100 GeV",50,8000.0,SQRTS);
+    TH1D *sphM_h = new TH1D("sphM_h","Sphaleron Transition Energy;Invariant Mass [TeV];Events / 100 GeV",50,8.0,SQRTS/1000.0);
     TH1D *sphPz_h = new TH1D("sphPz_h","Sphaleron p_{z};p_{z} [GeV];Events / 100 GeV",80,-4000.0,4000.0);
     TH1D *outID_h = new TH1D("outID_h","Outgoing PDG IDs;PDG ID;Entries",33,-16.5,16.5);
     TH1D *p1x_h = new TH1D("p1x_h","Parton 1 Momentum Fraction;x_{1};Events / 0.01",60,0.4,1.0);
@@ -111,10 +112,10 @@ int main(int argc, char* argv[])
         TH1D hBufeta(nameBuf.c_str(),titBuf.c_str(),100,-5,5);
         eta_hv.push_back(hBufeta);
 
-        titBuf = Form("Quark %i #phi;#phi;Entries / 0.1",iq);
+        titBuf = Form("Quark %i #phi;#phi;Entries / 0.1 #pi",iq);
         if(iq < 0) nameBuf = Form("phi_iqm%i_h",int(fabs(iq)));
         else nameBuf = Form("phi_iqp%i_h",int(fabs(iq)));
-        TH1D hBufphi(nameBuf.c_str(),titBuf.c_str(),64,-3.2,3.2);
+        TH1D hBufphi(nameBuf.c_str(),titBuf.c_str(),20,-1.0*TMath::Pi(),TMath::Pi());
         phi_hv.push_back(hBufphi);
     }
 
@@ -215,7 +216,7 @@ int main(int argc, char* argv[])
         pz = mom.Pz();
 
         weight = 1.0;
-        while(weight > maxW*rand.Uniform())
+        while(weight > MPW*rand.Uniform())
         {
             gen.SetDecay(mom, confBuf.size(), masses);
 
@@ -462,7 +463,7 @@ int main(int argc, char* argv[])
 
         inQid_h->Fill(iq2,iq1);
         frac2D_h->Fill(x2,x1);
-        sphM_h->Fill(momM);
+        sphM_h->Fill(momM/1000.0);
         sphPz_h->Fill(pz);
         p1x_h->Fill(x1);
         p1id_h->Fill(iq1);
@@ -499,19 +500,6 @@ int main(int argc, char* argv[])
 
     return 0;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
