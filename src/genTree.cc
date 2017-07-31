@@ -49,7 +49,11 @@ int main(int argc, char* argv[])
     TRandom3 rand;
     rand.SetSeed(0);
     particleBase *partBase = new particleBase();
-    vector<TLorentzVector> daughters;
+    vector<double> daughtersPt;
+    vector<double> daughtersEta;
+    vector<double> daughtersPhi;
+    vector<double> daughtersE;
+    vector<double> daughtersID;
     TLorentzVector mom(0.0,0.0,0.0,9100.0);
     TLorentzVector u1(0.0,0.0,0.0,0.0);
     TLorentzVector u2(0.0,0.0,0.0,0.0);
@@ -120,7 +124,11 @@ int main(int argc, char* argv[])
     }
 
     TTree *myT = new TTree("mcTree","mcTree");
-    myT->Branch("daughters",&daughters); 
+    myT->Branch("daughtersPt",&daughtersPt); 
+    myT->Branch("daughtersEta",&daughtersEta); 
+    myT->Branch("daughtersPhi",&daughtersPhi); 
+    myT->Branch("daughtersE",&daughtersE); 
+    myT->Branch("daughtersID",&daughtersID); 
     myT->Branch("weight",&weight); 
     myT->Branch("pz",&pz); 
     myT->Branch("x1",&x1); 
@@ -136,7 +144,11 @@ int main(int argc, char* argv[])
 
     while(NF < Nevt)
     {
-        daughters.clear();
+        daughtersPt.clear();
+        daughtersEta.clear();
+        daughtersPhi.clear();
+        daughtersE.clear();
+        daughtersID.clear();
 
         Q2 = 0.0;
         double mcP = 1.1;
@@ -208,10 +220,7 @@ int main(int argc, char* argv[])
 
         u1.SetXYZM(0.0,0.0,x1*6500,UQ_MASS);
         u2.SetXYZM(0.0,0.0,x2*(-6500),UQ_MASS);
-        daughters.push_back(u1);
-        daughters.push_back(u2);
         mom = u1 + u2;
-        //daughters.push_back(mom);
         momM = mom.M();
         pz = mom.Pz();
 
@@ -221,6 +230,7 @@ int main(int argc, char* argv[])
             gen.SetDecay(mom, confBuf.size(), masses);
 
             weight = gen.Generate();
+            if(weight > MPW) cout << "The code needs to recompiled with a higher MPW" << endl;
         }
 
         //Extract Decay 4-vectors and assign colors to non-spectator quarks
@@ -321,7 +331,6 @@ int main(int argc, char* argv[])
             interQ3 += g3q[ii].q3;
         }
         sumInterQ3_h->Fill(interQ3);
-        daughters.push_back(interP);
         particle interBuf;
         interBuf.mass = interP.M();
         interBuf.color = 0;
@@ -356,7 +365,11 @@ int main(int argc, char* argv[])
                 g3q[ii].ic = icolS;
             }
             fileParts.push_back(g3q[ii]);
-            daughters.push_back(g3q[ii].p4v);
+            daughtersPt.push_back(g3q[ii].p4v.Pt());
+            daughtersEta.push_back(g3q[ii].p4v.Eta());
+            daughtersPhi.push_back(g3q[ii].p4v.Phi());
+            daughtersE.push_back(g3q[ii].p4v.E());
+            daughtersID.push_back(g3q[ii].pid);
         }
 
         //Push second Gen quarks onto output stack
@@ -369,7 +382,6 @@ int main(int argc, char* argv[])
             interQ3 += g2q[ii].q3;
         }
         sumInterQ3_h->Fill(interQ3);
-        daughters.push_back(interP);
         interBuf.mass = interP.M();
         interBuf.color = 0;
         if(g2q.size() == 2) 
@@ -401,7 +413,11 @@ int main(int argc, char* argv[])
                 g2q[ii].ic = icolS;
             }
             fileParts.push_back(g2q[ii]);
-            daughters.push_back(g2q[ii].p4v);
+            daughtersPt.push_back(g2q[ii].p4v.Pt());
+            daughtersEta.push_back(g2q[ii].p4v.Eta());
+            daughtersPhi.push_back(g2q[ii].p4v.Phi());
+            daughtersE.push_back(g2q[ii].p4v.E());
+            daughtersID.push_back(g2q[ii].pid);
         }
 
         //Push first Gen quarks onto output stack
@@ -414,7 +430,6 @@ int main(int argc, char* argv[])
             interQ3 += g1q[ii].q3;
         }
         sumInterQ3_h->Fill(interQ3);
-        daughters.push_back(interP);
         interBuf.mass = interP.M();
         interBuf.color = 0;
         if(g1q.size() == 2) 
@@ -440,7 +455,11 @@ int main(int argc, char* argv[])
                 g1q[ii].m2 = 2;
             }
             fileParts.push_back(g1q[ii]);
-            daughters.push_back(g1q[ii].p4v);
+            daughtersPt.push_back(g1q[ii].p4v.Pt());
+            daughtersEta.push_back(g1q[ii].p4v.Eta());
+            daughtersPhi.push_back(g1q[ii].p4v.Phi());
+            daughtersE.push_back(g1q[ii].p4v.E());
+            daughtersID.push_back(g1q[ii].pid);
         }
 
         //Push leptons onto output stack
@@ -449,11 +468,23 @@ int main(int argc, char* argv[])
             leps[i].m1 = 1;
             leps[i].m2 = 2;
             fileParts.push_back(leps[i]);
-            daughters.push_back(leps[i].p4v);
+            daughtersPt.push_back(leps[i].p4v.Pt());
+            daughtersEta.push_back(leps[i].p4v.Eta());
+            daughtersPhi.push_back(leps[i].p4v.Phi());
+            daughtersE.push_back(leps[i].p4v.E());
+            daughtersID.push_back(leps[i].pid);
         }
 
         //Push spectator Quarks if there are any
-        for(int i = 0; i < specParts.size(); i++) fileParts.push_back(specParts[i]);
+        for(int i = 0; i < specParts.size(); i++) 
+        {
+            fileParts.push_back(specParts[i]);
+            daughtersPt.push_back(specParts[i].p4v.Pt());
+            daughtersEta.push_back(specParts[i].p4v.Eta());
+            daughtersPhi.push_back(specParts[i].p4v.Phi());
+            daughtersE.push_back(specParts[i].p4v.E());
+            daughtersID.push_back(specParts[i].pid);
+        }
 
         if(weight > maxwt) 
         {
