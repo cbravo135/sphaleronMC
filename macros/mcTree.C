@@ -1,14 +1,8 @@
 #define mcTree_cxx
 #include "mcTree.h"
 #include <TH2.h>
-#include <TFile.h>
 #include <TStyle.h>
 #include <TCanvas.h>
-#include <TLorentzVector.h>
-
-#include <iostream>
-
-using namespace std;
 
 void mcTree::Loop()
 {
@@ -39,37 +33,11 @@ void mcTree::Loop()
 
    Long64_t nentries = fChain->GetEntriesFast();
 
-   TFile *myF = new TFile("dalitz.root","RECREATE");
-
-   TH2D *dalitz = new TH2D("dalitz","dalitz",910,0.0,9100.0,910,0.0,9100.0);
-
    Long64_t nbytes = 0, nb = 0;
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
-
-      double m12 = 0.0;
-      double m13 = 0.0;
-
-      TLorentzVector p1 = daughters->at(0);
-      TLorentzVector p2 = daughters->at(1);
-      TLorentzVector p3 = daughters->at(2);
-
-      TLorentzVector p12 = p1 + p2;
-      TLorentzVector p13 = p1 + p3;
-
-      m12 = p12.M();
-      m13 = p13.M();
-
-      if(jentry%1000 == 0) cout << "m12: " << m12 << "   m13: " << m13 << endl;
-
-      dalitz->Fill(m12,m13);
-
    }
-
-   dalitz->Write();
-   myF->Write();
-   myF->Close();
 }
