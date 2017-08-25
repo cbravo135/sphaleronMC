@@ -20,8 +20,6 @@
 #include "../include/configBuilder.h"
 #include "../include/genTree.h"
 #include "../include/LHEWriter.h"
-#include "../include/mstwpdf.h"
-//#include "../include/protonPDF.h"
 
 #define ARGS 4
 #define SQRTS 13000.0

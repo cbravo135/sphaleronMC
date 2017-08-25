@@ -1,5 +1,6 @@
 #include "../include/particles.h"
 #include <iostream>
+#include <math.h>
 
 particleBase::particleBase()
 {
