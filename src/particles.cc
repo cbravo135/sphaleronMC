@@ -1,3 +1,4 @@
+//This class serves as a LUT of the particles that can come from sphaleron transitions
 #include "../include/particles.h"
 #include <iostream>
 #include <math.h>

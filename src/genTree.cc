@@ -21,7 +21,7 @@
 #include "../include/genTree.h"
 #include "../include/LHEWriter.h"
 
-#define ARGS 4
+#define ARGS 6
 #define SQRTS 13000.0
 #define MPW 5.0e-7
 
@@ -31,28 +31,51 @@ using namespace std;
 int main(int argc, char* argv[])
 {
 
+    //read arguements and do conversions and checks on them
     if(argc != ARGS+1)
     {
-        cout << "./genTree threshold maxweight Nevents Filename" << endl;
+        cout << "genTree threshold maxweight Nevents pNCS bCancel Filename" << endl;
         return -99;
     }
 
     float thr = atof(argv[1]);
     float MCW = atof(argv[2]);
+    if(MCW < 0.0)
+    {
+        cout << "maxweight must be greater than zero" << endl;
+        return -99;
+    }
     int Nevt = atoi(argv[3]);
-    string ofName = string(argv[4]);
+    float pNCS = atof(argv[4]);
+    if(pNCS > 1 || pNCS < 0)
+    {
+        cout << "pNCS must be in [0,1]" << endl;
+        return -99;
+    }
+    int bCancel = atoi(argv[5]);
+    if(bCancel < 0 || bCancel > 1)
+    {
+        cout << "bCancel must be 0 or 1" << endl;
+        return -99;
+    }
+    bool bCan = bCancel;
+    string ofName = string(argv[6]);
+
+    //Init structures needed during generatation
     double maxwt = 0;
+    double maxMCtot = 0.0;
 
     int NF = 0;
     TRandom3 rand;
     rand.SetSeed(0);
     particleBase *partBase = new particleBase();
+    configBuilder confBuild;
     vector<double> daughtersPt;
     vector<double> daughtersEta;
     vector<double> daughtersPhi;
     vector<double> daughtersE;
     vector<double> daughtersID;
-    TLorentzVector mom(0.0,0.0,0.0,9100.0);
+    TLorentzVector mom(0.0,0.0,0.0,thr);
     TLorentzVector u1(0.0,0.0,0.0,0.0);
     TLorentzVector u2(0.0,0.0,0.0,0.0);
     double masses[15];
@@ -68,21 +91,17 @@ int main(int argc, char* argv[])
     double momM = 0.0;
     double pz = 0.0;
 
+    //Init output files
     TFile *myF = new TFile((ofName+".root").c_str(),"RECREATE","Holds daughters from sphaleron decay");
     LHEWriter lheF(ofName);
 
     double minx = thr*thr/(SQRTS*SQRTS);
 
-    //TF1 pdfu("pdfu","(x^(-1.16))*(1-x)^(1.76)/(2.19*x)",minx,1.0);
-
-    //const PDF* LHApdf = mkPDF("NNPDF30_nlo_nf_5_pdfas",0);
+    //Init parton distribution functions
     const PDF* LHApdf = mkPDF("NNPDF30_lo_as_0118",0);
     cout << LHApdf->xfxQ2(2, 0.5, SQRTS*SQRTS) << endl;
 
-    //c_mstwpdf *pdf = new c_mstwpdf("/afs/cern.ch/user/b/bravo/work/sphaleron/mc/toy/mstw2008/Grids/mstw2008nnlo.00.dat");
-    //c_mstwpdf *pdf = new c_mstwpdf("../mstw2008/Grids/mstw2008nnlo.00.dat");
-    double maxMCtot = 0.0;
-
+    //Initialize histograms for debugging
     TH1D *x1_h = new TH1D("x1_h","x1 inclusive",1000,0.0,1.0);
     TH1D *mcTot_h = new TH1D("mcTot_h","Monte Carlo Probabilities",100,0.0,MCW);
     TH1D *sumInterQ3_h = new TH1D("sumInterQ3_h","Intermediate particle charges",21,-10.5,10.5);
@@ -121,6 +140,7 @@ int main(int argc, char* argv[])
         phi_hv.push_back(hBufphi);
     }
 
+    //Initialize TTree to save event info
     TTree *myT = new TTree("mcTree","mcTree");
     myT->Branch("daughtersPt",&daughtersPt); 
     myT->Branch("daughtersEta",&daughtersEta); 
@@ -138,10 +158,9 @@ int main(int argc, char* argv[])
 
     int pdfN = 0;
 
-    configBuilder confBuild;
-
-    while(NF < Nevt)
+    while(NF < Nevt)//Main event generation loop
     {
+        //Make sure everything is reset from the last event
         daughtersPt.clear();
         daughtersEta.clear();
         daughtersPhi.clear();
@@ -158,8 +177,6 @@ int main(int argc, char* argv[])
             Q2 = 0.0;
             while(Q2 < thr*thr)
             {
-                //x1 = proton.sample();
-                //x2 = proton.sample();
                 x1 = (1.0-minx)*rand.Uniform()+minx;
                 x2 = (1.0-minx)*rand.Uniform()+minx;
                 Q2 = x1*x2*SQRTS*SQRTS;
@@ -170,7 +187,6 @@ int main(int argc, char* argv[])
             {
                 if(i1 == 0) continue;
                 iq1 = i1;
-                //double x1p = pdf->parton(iq1,x1,SQRTS);
                 double x1p = LHApdf->xfxQ2(iq1, x1, Q2)/x1;
                 for(int i2 = -5; i2 < 6; i2++)
                 {
@@ -189,9 +205,8 @@ int main(int argc, char* argv[])
             if(maxMCtot < mcTot) {maxMCtot = mcTot; cout << "Max MC Total: " << maxMCtot << endl;}
         }
 
-        vector<particle> inParts;
-
         //Build incoming particles, sphaleron, and prepare to decay
+        vector<particle> inParts;
         particle partBuf = partBase->getParticle(iq1);
         if(iq1 != partBuf.pid) cout << "iq1 = " << iq1 << " != partBuf.pid = " << partBuf.pid << endl;
         partBuf.color = 501;
@@ -203,13 +218,15 @@ int main(int argc, char* argv[])
         partBuf.p4v.SetXYZM(0.0,0.0,x2*(-6500),partBuf.mass);
         inParts.push_back(partBuf); //Push second incoming quark
 
-        int colNow = 503;
+        int colNow = 503;//This is used to keep track of the color line numbers already used
 
+        //Build the mother particle from incoming partons
         particle mother;
         mother.p4v = inParts[0].p4v + inParts[1].p4v;
         mother.mass = mother.p4v.M();
 
-        vector<particle> confBuf = confBuild.build(iq1,iq2);
+        //Generate vector of outgoing fermionic configuration
+        vector<particle> confBuf = confBuild.build(iq1,iq2,pNCS,bCan);
         int Nline = 0;
         for(int i = 0; i < confBuf.size(); i++)
         {
@@ -222,6 +239,7 @@ int main(int argc, char* argv[])
         momM = mom.M();
         pz = mom.Pz();
 
+        //"Decay" mother to the generated configuration
         weight = 1.0;
         while(weight > MPW*rand.Uniform())
         {

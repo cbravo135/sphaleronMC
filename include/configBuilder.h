@@ -16,7 +16,7 @@ class configBuilder
         configBuilder();
         ~configBuilder();
 
-        vector<particle> build(int iQ1,int iQ2);
+        vector<particle> build(int iQ1, int iQ2, float pNCS, bool bCancel);
 
 };
 

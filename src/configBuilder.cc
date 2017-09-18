@@ -87,12 +87,11 @@ configBuilder::~configBuilder()
 {
 }
 
-vector<particle> configBuilder::build(int iQ1, int iQ2)
+vector<particle> configBuilder::build(int iQ1, int iQ2, float pNCS, bool bCancel)
 {
     vector<particle> conf;
     vector<int> doublets;
-    int dCS = 2*rand.Integer(2) - 1;//Choose matter (1) or antimatter (-1)
-    //cout << "dCS: " << dCS << endl;
+    int dCS = 2*int(rand.Uniform() < pNCS) - 1;//Choose matter (1) or antimatter (-1)
     for(int i = 0; i < 12; i++)
     {
         doublets.push_back(i);
@@ -112,17 +111,21 @@ vector<particle> configBuilder::build(int iQ1, int iQ2)
 
     bool spec1 = true;
     bool spec2 = true;
-    for(int i = 0; i < 12; i++)
+
+    if(bCancel)
     {
-        if(iQ1 + conf[i].pid == 0 && spec1)
+        for(int i = 0; i < 12; i++)
         {
-            conf.erase(conf.begin()+i);
-            spec1 = false;
-        }
-        else if(iQ2 + conf[i].pid == 0 && spec2)
-        {
-            conf.erase(conf.begin()+i);
-            spec2 = false;
+            if(iQ1 + conf[i].pid == 0 && spec1)
+            {
+                conf.erase(conf.begin()+i);
+                spec1 = false;
+            }
+            else if(iQ2 + conf[i].pid == 0 && spec2)
+            {
+                conf.erase(conf.begin()+i);
+                spec2 = false;
+            }
         }
     }
     if(spec1)
@@ -158,21 +161,18 @@ vector<particle> configBuilder::build(int iQ1, int iQ2)
     }
 
     /*conf.clear();
-    for(int i = 0; i < parts.size(); i++)
-    {
-        if(i==1 || i==5 || i==9) continue;
-        particle partBuf;
-        partBuf.mass = parts[i].mass;
-        partBuf.pid = dCS*parts[i].pid;
-        partBuf.color = parts[i].color;
-        conf.push_back(partBuf);
-        if(i == 2 || i == 6 || i == 10) conf.push_back(partBuf);
-    }*/
+      for(int i = 0; i < parts.size(); i++)
+      {
+      if(i==1 || i==5 || i==9) continue;
+      particle partBuf;
+      partBuf.mass = parts[i].mass;
+      partBuf.pid = dCS*parts[i].pid;
+      partBuf.color = parts[i].color;
+      conf.push_back(partBuf);
+      if(i == 2 || i == 6 || i == 10) conf.push_back(partBuf);
+      }*/
     return conf;
 }
-
-
-
 
 
 
