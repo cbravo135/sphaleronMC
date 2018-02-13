@@ -21,8 +21,7 @@
 #include "../include/genTree.h"
 #include "../include/LHEWriter.h"
 
-#define ARGS 6
-#define SQRTS 13000.0
+#define ARGS 7
 #define MPW 5.0e-7
 
 using namespace LHAPDF;
@@ -34,32 +33,33 @@ int main(int argc, char* argv[])
     //read arguements and do conversions and checks on them
     if(argc != ARGS+1)
     {
-        cout << "genTree threshold maxweight Nevents pNCS bCancel Filename" << endl;
+        cout << "genTree sqrt(s) threshold maxweight Nevents pNCS bCancel Filename" << endl;
         return -99;
     }
 
-    float thr = atof(argv[1]);
-    float MCW = atof(argv[2]);
+    float SQRTS = atof(argv[1]);
+    float thr = atof(argv[2]);
+    float MCW = atof(argv[3]);
     if(MCW < 0.0)
     {
         cout << "maxweight must be greater than zero" << endl;
         return -99;
     }
-    int Nevt = atoi(argv[3]);
-    float pNCS = atof(argv[4]);
+    int Nevt = atoi(argv[4]);
+    float pNCS = atof(argv[5]);
     if(pNCS > 1 || pNCS < 0)
     {
         cout << "pNCS must be in [0,1]" << endl;
         return -99;
     }
-    int bCancel = atoi(argv[5]);
+    int bCancel = atoi(argv[6]);
     if(bCancel < 0 || bCancel > 1)
     {
         cout << "bCancel must be 0 or 1" << endl;
         return -99;
     }
     bool bCan = bCancel;
-    string ofName = string(argv[6]);
+    string ofName = string(argv[7]);
 
     //Init structures needed during generatation
     double maxwt = 0;
