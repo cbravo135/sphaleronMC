@@ -76,8 +76,6 @@ int main(int argc, char* argv[])
     vector<double> daughtersE;
     vector<double> daughtersID;
     TLorentzVector mom(0.0,0.0,0.0,thr);
-    TLorentzVector u1(0.0,0.0,0.0,0.0);
-    TLorentzVector u2(0.0,0.0,0.0,0.0);
     double masses[15];
 
     double weight = 0.0;
@@ -210,12 +208,12 @@ int main(int argc, char* argv[])
         particle partBuf = partBase->getParticle(iq1);
         if(iq1 != partBuf.pid) cout << "iq1 = " << iq1 << " != partBuf.pid = " << partBuf.pid << endl;
         partBuf.color = 501;
-        partBuf.p4v.SetXYZM(0.0,0.0,x1*6500,partBuf.mass);
+        partBuf.p4v.SetXYZM(0.0,0.0,x1*SQRTS/2.0,partBuf.mass);
         inParts.push_back(partBuf); //Push first incoming quark
 
         partBuf = partBase->getParticle(iq2);
         partBuf.color = 502;
-        partBuf.p4v.SetXYZM(0.0,0.0,x2*(-6500),partBuf.mass);
+        partBuf.p4v.SetXYZM(0.0,0.0,-1.0*x2*SQRTS/2.0,partBuf.mass);
         inParts.push_back(partBuf); //Push second incoming quark
 
         int colNow = 503;//This is used to keep track of the color line numbers already used
@@ -233,9 +231,7 @@ int main(int argc, char* argv[])
             masses[i] = confBuf[i].mass;
         }
 
-        u1.SetXYZM(0.0,0.0,x1*6500,UQ_MASS);
-        u2.SetXYZM(0.0,0.0,x2*(-6500),UQ_MASS);
-        mom = u1 + u2;
+        mom = inParts[0].p4v + inParts[1].p4v;
         momM = mom.M();
         pz = mom.Pz();
 
